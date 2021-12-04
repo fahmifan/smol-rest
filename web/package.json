@@ -1,0 +1,10 @@
+{
+  "name": "smol-web",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "vite-plugin-mpa": "^1.1.1"
+  }
+}
