@@ -13,13 +13,13 @@ import (
 
 const userSessionKey = "user"
 
-type UserSession struct {
-	ID   string
-	Role model.Role
+type Session struct {
+	UserID string
+	Role   model.Role
 }
 
 func init() {
-	gob.Register(UserSession{})
+	gob.Register(Session{})
 }
 
 type SessionManager struct {
@@ -34,11 +34,15 @@ func NewSessionManager(db *sql.DB) *SessionManager {
 	}
 }
 
-func (s *SessionManager) GetUser(ctx context.Context) *UserSession {
-	userSess, _ := s.session.Get(ctx, userSessionKey).(*UserSession)
+func (s *SessionManager) GetUser(ctx context.Context) Session {
+	val := s.session.Get(ctx, userSessionKey)
+	userSess, ok := val.(Session)
+	if !ok {
+		return Session{Role: model.RoleGuest}
+	}
 	return userSess
 }
 
-func (s *SessionManager) PutUser(ctx context.Context, user *UserSession) {
+func (s *SessionManager) PutUser(ctx context.Context, user *Session) {
 	s.session.Put(ctx, userSessionKey, user)
 }

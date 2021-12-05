@@ -6,13 +6,12 @@ import * as oto from '../../service/oto.gen'
 function App() {
   const [count, setCount] = useState(0)
   let client = new oto.Client()
-  client.basepath = 'http://localhost:8080/api/oto/'
   let greeter = new oto.GreeterService(client)
 
   useEffect(() => {
     console.log("callback")
     let req = new oto.GreetRequest()
-    req.name = 'joman'
+    req.name = 'boyyy'
     greeter.greet(req).then(ok => {
       console.log(ok)
     })
@@ -21,6 +20,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        <a href="/api/rest/auth/login/oauth2?provider=google">Login With Google</a>
         <img src={logo} className="App-logo" alt="logo" />
         <p>Hello Vite + React!</p>
         <p>

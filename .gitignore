@@ -1,3 +1,5 @@
 smol_sqlite3.db
 smol_sqlite3.db-shm
 smol_sqlite3.db-wal
+
+.env

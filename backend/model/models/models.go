@@ -11,6 +11,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func CloserErr(fn func() error) {
+	if err := fn(); err != nil {
+		log.Error().Err(err).Msg("CloserErr")
+	}
+}
+
+func LogErr(err error) {
+	if err != nil {
+		log.Error().Err(err).Msg("LogErr")
+	}
+}
+
 func PanicErr(err error) {
 	if err != nil {
 		log.Error().Err(err).Msg("fatal")

@@ -9,6 +9,7 @@ import (
 	"github.com/fahmifan/smol/backend/config"
 	"github.com/fahmifan/smol/backend/datastore/sqlite"
 	"github.com/fahmifan/smol/backend/restapi"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +30,14 @@ func serverCMD() *cobra.Command {
 		Use:   "server",
 		Short: "run web server",
 		Run: func(cmd *cobra.Command, args []string) {
+			log.Logger = zerolog.New(zerolog.ConsoleWriter{
+				Out:        os.Stdout,
+				TimeFormat: zerolog.TimeFieldFormat,
+			}).With().Timestamp().Caller().Logger()
+
 			db := sqlite.MustOpen()
+			defer db.Close()
+
 			sqlite.Migrate(db)
 
 			server := restapi.NewServer(&restapi.ServerConfig{

@@ -6,9 +6,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/fahmifan/smol/backend/config"
+	"github.com/fahmifan/smol/backend/model"
 	"github.com/fahmifan/smol/backend/restapi/generated"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
+	"github.com/gorilla/sessions"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/google"
 	"github.com/pacedotdev/oto/otohttp"
 	"github.com/rs/zerolog/log"
 )
@@ -25,6 +31,7 @@ type Server struct {
 }
 
 func NewServer(cfg *ServerConfig) *Server {
+	cfg.session = NewSessionManager(cfg.DB)
 	return &Server{cfg}
 }
 
@@ -35,7 +42,8 @@ func (s *Server) Stop(ctx context.Context) {
 }
 
 func (s *Server) Run() {
-	s.httpServer = &http.Server{Addr: fmt.Sprintf(":%d", s.Port), Handler: s.route()}
+	handler := s.session.session.LoadAndSave(s.route())
+	s.httpServer = &http.Server{Addr: fmt.Sprintf(":%d", s.Port), Handler: handler}
 	if err := s.httpServer.ListenAndServe(); err != nil {
 		log.Error().Err(err).Msg("")
 	}
@@ -53,6 +61,11 @@ func (s *Server) route() chi.Router {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
+	baseURL := "http://localhost:9000/api/rest/auth/login/provider/callback?provider=google"
+	cookieStore := sessions.NewCookieStore([]byte("secret"))
+	gothic.Store = cookieStore
+	goth.UseProviders(google.New(config.GoogleClientID(), config.GoogleClientSecret(), baseURL))
+
 	rpcRoute := "/api/oto"
 	router.Mount(rpcRoute, s.initOTO(rpcRoute))
 
@@ -63,7 +76,7 @@ func (s *Server) route() chi.Router {
 }
 
 func (s *Server) initOTO(rpcRoute string) http.Handler {
-	greeter := GreeterService{}
+	greeter := GreeterService{s}
 	server := otohttp.NewServer()
 	server.Basepath = fmtBasepath(rpcRoute)
 	generated.RegisterGreeterService(server, greeter)
@@ -73,12 +86,46 @@ func (s *Server) initOTO(rpcRoute string) http.Handler {
 func (s *Server) initREST() http.Handler {
 	router := chi.NewRouter()
 	router.Get("/ping", s.handlePing())
+	router.Get("/auth/login/oauth2", s.handleLoginProvider())
+	router.Get("/auth/login/provider/callback", s.handleLoginProviderCallback())
 	return router
 }
 
 func (s *Server) handlePing() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte("pong"))
+	}
+}
+
+func (s *Server) handleLoginProvider() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		log.Info().Msg("masook")
+		if _, err := gothic.CompleteUserAuth(rw, r); err == nil {
+			log.Error().Err(err).Msg("")
+			http.Redirect(rw, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		gothic.BeginAuthHandler(rw, r)
+	}
+}
+
+func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		guser, err := gothic.CompleteUserAuth(rw, r)
+		if err != nil {
+			log.Error().Err(err).Stack().Msg("")
+			return
+		}
+
+		user := &Session{
+			UserID: guser.UserID,
+			Role:   model.RoleUser,
+		}
+		log.Debug().Interface("user", user).Msg("")
+		s.session.PutUser(r.Context(), user)
+
+		http.Redirect(rw, r, "/subpage", http.StatusSeeOther)
 	}
 }
 
