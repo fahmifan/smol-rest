@@ -12,6 +12,7 @@ require (
 	github.com/markbates/goth v1.68.0
 	github.com/mashingan/smapping v0.1.13
 	github.com/mattn/go-sqlite3 v1.14.9
+	github.com/oklog/ulid/v2 v2.0.2
 	github.com/pacedotdev/oto/otohttp v0.8.0
 	github.com/rs/zerolog v1.26.0
 	github.com/spf13/cobra v1.2.1
@@ -24,7 +25,6 @@ require (
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/oklog/ulid/v2 v2.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
