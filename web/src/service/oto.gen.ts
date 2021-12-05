@@ -17,14 +17,12 @@ export class Client {
 }
 
 
-// GreeterService makes nice greetings.
-export class GreeterService {
+export class SmolService {
 	constructor(readonly client: Client) {}
 	
-	// Greet makes a greeting.
-	async greet(greetRequest?: GreetRequest, modifyHeaders?: HeadersFunc): Promise<GreetResponse> {
-		if (greetRequest == null) {
-			greetRequest = new GreetRequest();
+		async addTodo(addTodoRequest?: AddTodoRequest, modifyHeaders?: HeadersFunc): Promise<Todo> {
+		if (addTodoRequest == null) {
+			addTodoRequest = new AddTodoRequest();
 		}
 		const headers: Headers = new Headers();
 		headers.set('Accept', 'application/json');
@@ -35,19 +33,19 @@ export class GreeterService {
 		if (modifyHeaders) {
 			await modifyHeaders(headers)
 		}
-		const response = await fetch(this.client.basepath + 'GreeterService.Greet', {
+		const response = await fetch(this.client.basepath + 'SmolService.AddTodo', {
 			method: 'POST',
 			headers: headers,
-			body: JSON.stringify(greetRequest),
+			body: JSON.stringify(addTodoRequest),
 		})
 		if (response.status !== 200) {
-			throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`);
+			throw new Error(`SmolService.AddTodo: ${response.status} ${response.statusText}`);
 		}
 		return response.json().then((json) => {
 			if (json.error) {
 				throw new Error(json.error);
 			}
-			return new GreetResponse(json);
+			return new Todo(json);
 		})
 	}
 	
@@ -55,30 +53,45 @@ export class GreeterService {
 
 
 
-// GreetRequest is the request object for GreeterService.Greet.
-export class GreetRequest {
+export class AddTodoRequest {
 	constructor(data?: any) {
 		if (data) {
 		
 			
-			this.name = data.name;
+			this.item = data.item;
+			
+		
+			
+			this.done = data.done;
 			
 		
 		}
 	}
 
-	// Name is the person to greet.
-	name: string = stringDefault;
+		item: string = stringDefault;
+
+		done: boolean = booleanDefault;
 
 }
 
-// GreetResponse is the response object containing a person's greeting.
-export class GreetResponse {
+export class Todo {
 	constructor(data?: any) {
 		if (data) {
 		
 			
-			this.greeting = data.greeting;
+			this.id = data.id;
+			
+		
+			
+			this.userID = data.userID;
+			
+		
+			
+			this.done = data.done;
+			
+		
+			
+			this.detail = data.detail;
 			
 		
 			
@@ -88,8 +101,13 @@ export class GreetResponse {
 		}
 	}
 
-	// Greeting is the greeting that was generated.
-	greeting: string = stringDefault;
+		id: string = stringDefault;
+
+		userID: string = stringDefault;
+
+		done: boolean = booleanDefault;
+
+		detail: string = stringDefault;
 
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	error: string = stringDefault;

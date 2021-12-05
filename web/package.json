@@ -10,9 +10,13 @@
 		"serve": "vite preview"
 	},
 	"dependencies": {
-		"vite-plugin-mpa": "^1.1.1",
+		"@chakra-ui/react": "^1.7.2",
+		"@emotion/react": "^11",
+		"@emotion/styled": "^11",
+		"framer-motion": "^4",
 		"react": "^17.0.0",
-		"react-dom": "^17.0.0"
+		"react-dom": "^17.0.0",
+		"vite-plugin-mpa": "^1.1.1"
 	},
 	"devDependencies": {
 		"@types/react": "^17.0.0",

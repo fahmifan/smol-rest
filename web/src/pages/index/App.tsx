@@ -6,14 +6,14 @@ import * as oto from '../../service/oto.gen'
 function App() {
   const [count, setCount] = useState(0)
   let client = new oto.Client()
-  let greeter = new oto.GreeterService(client)
+  let smoler = new oto.SmolService(client)
 
   useEffect(() => {
     console.log("callback")
-    let req = new oto.GreetRequest()
-    req.name = 'boyyy'
-    greeter.greet(req).then(ok => {
-      console.log(ok)
+    let req = new oto.AddTodoRequest()
+    req.item = 'todo ' + new Date()
+    smoler.addTodo(req).then(res => {
+      console.log(res)
     })
   }, [count])
 

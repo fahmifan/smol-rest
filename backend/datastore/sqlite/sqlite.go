@@ -26,3 +26,7 @@ func MustOpen() *sql.DB {
 	models.PanicErr(err)
 	return db
 }
+
+type SQLite struct {
+	DB *sql.DB
+}

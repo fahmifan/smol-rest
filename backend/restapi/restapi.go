@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/fahmifan/smol/backend/config"
+	"github.com/fahmifan/smol/backend/datastore/sqlite"
 	"github.com/fahmifan/smol/backend/model"
 	"github.com/fahmifan/smol/backend/restapi/generated"
 	"github.com/go-chi/chi"
@@ -22,6 +23,7 @@ import (
 type ServerConfig struct {
 	Port       int
 	DB         *sql.DB
+	DataStore  sqlite.SQLite
 	httpServer *http.Server
 	session    *SessionManager
 }
@@ -76,10 +78,10 @@ func (s *Server) route() chi.Router {
 }
 
 func (s *Server) initOTO(rpcRoute string) http.Handler {
-	greeter := GreeterService{s}
+	greeter := SmolService{s}
 	server := otohttp.NewServer()
 	server.Basepath = fmtBasepath(rpcRoute)
-	generated.RegisterGreeterService(server, greeter)
+	generated.RegisterSmolService(server, greeter)
 	return server
 }
 
@@ -122,7 +124,6 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 			UserID: guser.UserID,
 			Role:   model.RoleUser,
 		}
-		log.Debug().Interface("user", user).Msg("")
 		s.session.PutUser(r.Context(), user)
 
 		http.Redirect(rw, r, "/subpage", http.StatusSeeOther)

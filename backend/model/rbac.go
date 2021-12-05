@@ -42,14 +42,17 @@ type Permission int
 
 const (
 	View_Dashboard Permission = iota
+	Create_Todo    Permission = iota
 )
 
 var policy = map[Role][]Permission{
 	RoleAdmin: {
 		View_Dashboard,
+		Create_Todo,
 	},
 	RoleUser: {
 		View_Dashboard,
+		Create_Todo,
 	},
 	RoleGuest: {},
 }

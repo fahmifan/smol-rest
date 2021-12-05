@@ -10,3 +10,10 @@ CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS todos (
+    id TEXT PRIMARY KEY,
+    detail TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    done BOOLEAN NOT NULL DEFAULT FALSE
+);

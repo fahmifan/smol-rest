@@ -9,34 +9,31 @@ import (
 	"github.com/pacedotdev/oto/otohttp"
 )
 
-// GreeterService makes nice greetings.
-type GreeterService interface {
-
-	// Greet makes a greeting.
-	Greet(context.Context, GreetRequest) (*GreetResponse, error)
+type SmolService interface {
+	AddTodo(context.Context, AddTodoRequest) (*Todo, error)
 }
 
-type greeterServiceServer struct {
-	server         *otohttp.Server
-	greeterService GreeterService
+type smolServiceServer struct {
+	server      *otohttp.Server
+	smolService SmolService
 }
 
-// Register adds the GreeterService to the otohttp.Server.
-func RegisterGreeterService(server *otohttp.Server, greeterService GreeterService) {
-	handler := &greeterServiceServer{
-		server:         server,
-		greeterService: greeterService,
+// Register adds the SmolService to the otohttp.Server.
+func RegisterSmolService(server *otohttp.Server, smolService SmolService) {
+	handler := &smolServiceServer{
+		server:      server,
+		smolService: smolService,
 	}
-	server.Register("GreeterService", "Greet", handler.handleGreet)
+	server.Register("SmolService", "AddTodo", handler.handleAddTodo)
 }
 
-func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Request) {
-	var request GreetRequest
+func (s *smolServiceServer) handleAddTodo(w http.ResponseWriter, r *http.Request) {
+	var request AddTodoRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
 		return
 	}
-	response, err := s.greeterService.Greet(r.Context(), request)
+	response, err := s.smolService.AddTodo(r.Context(), request)
 	if err != nil {
 		s.server.OnErr(w, r, err)
 		return
@@ -47,16 +44,16 @@ func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// GreetRequest is the request object for GreeterService.Greet.
-type GreetRequest struct {
-	// Name is the person to greet.
-	Name string `json:"name"`
+type AddTodoRequest struct {
+	Item string `json:"item"`
+	Done bool   `json:"done"`
 }
 
-// GreetResponse is the response object containing a person's greeting.
-type GreetResponse struct {
-	// Greeting is the greeting that was generated.
-	Greeting string `json:"greeting"`
+type Todo struct {
+	ID     string `json:"id"`
+	UserID string `json:"userID"`
+	Done   bool   `json:"done"`
+	Detail string `json:"detail"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }
