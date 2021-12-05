@@ -10,7 +10,7 @@ interface HeadersFunc {
 export class Client {
 	// basepath is the path prefix for the requests.
 	// This may be a path, or an absolute URL.
-	public basepath: String = '/oto/'
+	public basepath: String = '/api/rcp/'
 	// headers allows calling code to mutate the HTTP
 	// headers of the underlying HTTP requests.
 	public headers?: HeadersFunc

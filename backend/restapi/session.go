@@ -2,10 +2,13 @@ package restapi
 
 import (
 	"context"
+	"database/sql"
 	"encoding/gob"
 
+	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/fahmifan/smol/backend/model"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const userSessionKey = "user"
@@ -23,8 +26,9 @@ type SessionManager struct {
 	session *scs.SessionManager
 }
 
-func NewSessionManager() *SessionManager {
+func NewSessionManager(db *sql.DB) *SessionManager {
 	sess := scs.New()
+	sess.Store = sqlite3store.New(db)
 	return &SessionManager{
 		session: sess,
 	}

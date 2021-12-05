@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/fahmifan/smol/internal/restapi"
+	"github.com/fahmifan/smol/backend/restapi"
 	"github.com/rs/zerolog/log"
 )
 
