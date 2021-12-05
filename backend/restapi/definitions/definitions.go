@@ -1,22 +1,22 @@
 package definitions
 
-// GreeterService makes nice greetings.
-type GreeterService interface {
-	// Greet makes a greeting.
-	Greet(GreetRequest) GreetResponse
+// SmolService makes nice Loginings.
+type SmolService interface {
+	// Login makes a Logining.
+	Login(LoginRequest) LoginResponse
 }
 
-// GreetRequest is the request object for GreeterService.Greet.
-type GreetRequest struct {
-	// Name is the person to greet.
+// LoginRequest is the request object for SmolService.Login.
+type LoginRequest struct {
+	// Name is the person to Login.
 	// example: "Mat Ryer"
 	Name string
 }
 
-// GreetResponse is the response object containing a
-// person's greeting.
-type GreetResponse struct {
-	// Greeting is the greeting that was generated.
+// LoginResponse is the response object containing a
+// person's Logining.
+type LoginResponse struct {
+	// Logining is the Logining that was generated.
 	// example: "Hello Mat Ryer"
-	Greeting string
+	Logining string
 }
