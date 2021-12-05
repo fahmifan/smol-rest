@@ -1,9 +1,22 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import logo from '@/logo.svg'
 import './App.css'
+import * as oto from '../../service/oto.gen'
 
 function App() {
   const [count, setCount] = useState(0)
+  let client = new oto.Client()
+  client.basepath = 'http://localhost:8080/api/oto/'
+  let greeter = new oto.GreeterService(client)
+
+  useEffect(() => {
+    console.log("callback")
+    let req = new oto.GreetRequest()
+    req.name = 'joman'
+    greeter.greet(req).then(ok => {
+      console.log(ok)
+    })
+  }, [count])
 
   return (
     <div className="App">

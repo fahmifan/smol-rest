@@ -1,18 +1,20 @@
-package service
+package restapi
 
 import (
 	"context"
 
-	"github.com/fahmifan/smol/internal/restapi/generated"
+	"github.com/fahmifan/smol/backend/restapi/generated"
 )
 
 var _ generated.GreeterService = &GreeterService{}
 
 // GreeterService makes nice greetings.
-type GreeterService struct{}
+type GreeterService struct {
+	*Server
+}
 
 // Greet makes a greeting.
-func (GreeterService) Greet(ctx context.Context, r generated.GreetRequest) (*generated.GreetResponse, error) {
+func (g GreeterService) Greet(ctx context.Context, r generated.GreetRequest) (*generated.GreetResponse, error) {
 	resp := &generated.GreetResponse{
 		Greeting: "Hello " + r.Name,
 	}

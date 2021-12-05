@@ -8,4 +8,8 @@ require (
 	github.com/rs/zerolog v1.26.0
 )
 
-require github.com/pkg/errors v0.9.1 // indirect
+require (
+	github.com/alexedwards/scs/v2 v2.5.0 // indirect
+	github.com/go-chi/cors v1.2.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+)

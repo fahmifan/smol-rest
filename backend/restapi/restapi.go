@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/fahmifan/smol/internal/restapi/generated"
-	"github.com/fahmifan/smol/internal/restapi/service"
+	"github.com/fahmifan/smol/backend/restapi/generated"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/pacedotdev/oto/otohttp"
 	"github.com/rs/zerolog/log"
 )
@@ -14,6 +14,7 @@ import (
 type ServerConfig struct {
 	Port       string
 	httpServer *http.Server
+	session    *SessionManager
 }
 
 type Server struct {
@@ -40,6 +41,15 @@ func (s *Server) Run() {
 func (s *Server) route() chi.Router {
 	router := chi.NewRouter()
 
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
 	rpcRoute := "/api/oto"
 	router.Mount(rpcRoute, s.initOTO(rpcRoute))
 
@@ -50,7 +60,7 @@ func (s *Server) route() chi.Router {
 }
 
 func (s *Server) initOTO(rpcRoute string) http.Handler {
-	greeter := service.GreeterService{}
+	greeter := GreeterService{}
 	server := otohttp.NewServer()
 	server.Basepath = fmtBasepath(rpcRoute)
 	generated.RegisterGreeterService(server, greeter)

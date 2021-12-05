@@ -8,8 +8,9 @@ oto:
     	./internal/restapi/definitions
 	@gofmt -w ./internal/restapi/generated/oto.gen.go ./internal/restapi/generated/oto.gen.go
 	@echo "generate ts client"
+	@mkdir -p web/src/service
 	@oto -template ./internal/restapi/definitions/templates/client.ts.plush \
-    	-out ./internal/restapi/generated/oto.gen.ts \
+    	-out ./web/src/service/oto.gen.ts \
     	-ignore Ignorer \
     	-pkg generated \
     	./internal/restapi/definitions
