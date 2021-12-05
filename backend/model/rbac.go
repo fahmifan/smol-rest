@@ -42,7 +42,7 @@ type Permission int
 
 const (
 	View_Dashboard Permission = iota
-	Create_Todo    Permission = iota
+	Create_Todo
 )
 
 var policy = map[Role][]Permission{
