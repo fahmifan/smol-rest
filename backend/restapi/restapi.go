@@ -2,6 +2,8 @@ package restapi
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/fahmifan/smol/backend/restapi/generated"
@@ -12,7 +14,8 @@ import (
 )
 
 type ServerConfig struct {
-	Port       string
+	Port       int
+	DB         *sql.DB
 	httpServer *http.Server
 	session    *SessionManager
 }
@@ -32,7 +35,7 @@ func (s *Server) Stop(ctx context.Context) {
 }
 
 func (s *Server) Run() {
-	s.httpServer = &http.Server{Addr: s.Port, Handler: s.route()}
+	s.httpServer = &http.Server{Addr: fmt.Sprintf(":%d", s.Port), Handler: s.route()}
 	if err := s.httpServer.ListenAndServe(); err != nil {
 		log.Error().Err(err).Msg("")
 	}
