@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/gorilla/sessions"
+	"github.com/jordan-wright/unindexed"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
@@ -73,6 +74,10 @@ func (s *Server) route() chi.Router {
 	restRoute := "/api/rest"
 	router.Mount(restRoute, s.initREST())
 
+	router.Get("/", func(rw http.ResponseWriter, r *http.Request) {
+		http.Redirect(rw, r, "/index/index.html", http.StatusSeeOther)
+	})
+	router.Method("GET", "/*", http.FileServer(unindexed.Dir("./web/dist")))
 	return router
 }
 

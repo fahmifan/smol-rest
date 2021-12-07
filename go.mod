@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/gorilla/sessions v1.1.1
 	github.com/joho/godotenv v1.4.0
+	github.com/jordan-wright/unindexed v0.0.0-20181209214434-78fa79113c0f
 	github.com/markbates/goth v1.68.0
 	github.com/mashingan/smapping v0.1.13
 	github.com/mattn/go-sqlite3 v1.14.9
@@ -22,7 +23,7 @@ require (
 	cloud.google.com/go v0.81.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
-	github.com/gorilla/mux v1.6.2 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -32,3 +33,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )
+
+replace github.com/jordan-wright/unindexed => github.com/fahmifan/unindexed v0.0.0-20211207225850-7559efa26737
