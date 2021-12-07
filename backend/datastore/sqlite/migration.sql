@@ -8,7 +8,9 @@ CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expiry);
 
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
-    username TEXT NOT NULL
+    "name" TEXT,
+    email TEXT NOT NULL,
+    "role" INT
 );
 
 CREATE TABLE IF NOT EXISTS todos (

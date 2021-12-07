@@ -8,7 +8,6 @@ import (
 
 	"github.com/fahmifan/smol/backend/config"
 	"github.com/fahmifan/smol/backend/datastore/sqlite"
-	"github.com/fahmifan/smol/backend/model"
 	"github.com/fahmifan/smol/backend/restapi/generated"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -96,37 +95,6 @@ func (s *Server) initREST() http.Handler {
 func (s *Server) handlePing() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte("pong"))
-	}
-}
-
-func (s *Server) handleLoginProvider() http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
-		log.Info().Msg("masook")
-		if _, err := gothic.CompleteUserAuth(rw, r); err == nil {
-			log.Error().Err(err).Msg("")
-			http.Redirect(rw, r, "/", http.StatusSeeOther)
-			return
-		}
-
-		gothic.BeginAuthHandler(rw, r)
-	}
-}
-
-func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
-		guser, err := gothic.CompleteUserAuth(rw, r)
-		if err != nil {
-			log.Error().Err(err).Stack().Msg("")
-			return
-		}
-
-		user := &Session{
-			UserID: guser.UserID,
-			Role:   model.RoleUser,
-		}
-		s.session.PutUser(r.Context(), user)
-
-		http.Redirect(rw, r, "/subpage", http.StatusSeeOther)
 	}
 }
 

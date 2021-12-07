@@ -7,10 +7,9 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-func NewID() string {
+func NewID() ulid.ULID {
 	seed := time.Now()
 	src := rand.NewSource(seed.UnixNano())
 	entropy := ulid.Monotonic(rand.New(src), 0)
-	id := ulid.MustNew(ulid.Timestamp(seed), entropy)
-	return id.String()
+	return ulid.MustNew(ulid.Timestamp(seed), entropy)
 }

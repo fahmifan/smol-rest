@@ -19,6 +19,7 @@ type ServiceError int
 const (
 	ErrInternal          ServiceError = 1000
 	ErrPermissionDenined ServiceError = 1001
+	ErrInvalidArgument   ServiceError = 1002
 )
 
 func (s ServiceError) Error() string {
@@ -46,7 +47,7 @@ func (g SmolService) AddTodo(ctx context.Context, r generated.AddTodoRequest) (*
 		return nil, ErrInternal
 	}
 	resp := &generated.Todo{
-		ID:     todo.ID,
+		ID:     todo.ID.String(),
 		UserID: todo.UserID,
 		Done:   todo.Done,
 		Detail: todo.Detail,

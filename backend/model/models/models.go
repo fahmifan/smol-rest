@@ -3,6 +3,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -107,4 +108,13 @@ func BoolInt(b bool) int {
 
 func IntBool(i int) bool {
 	return i == 1
+}
+
+func JSON(i interface{}) []byte {
+	bt, _ := json.Marshal(i)
+	return bt
+}
+
+func JSONS(i interface{}) string {
+	return string(JSON(i))
 }

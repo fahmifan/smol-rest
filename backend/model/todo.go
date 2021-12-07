@@ -1,7 +1,9 @@
 package model
 
+import "github.com/oklog/ulid/v2"
+
 type Todo struct {
-	ID     string
+	ID     ulid.ULID
 	UserID string
 	Detail string
 	Done   bool
