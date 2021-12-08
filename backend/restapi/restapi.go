@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/fahmifan/smol/backend/config"
 	"github.com/fahmifan/smol/backend/datastore/sqlite"
@@ -74,11 +76,38 @@ func (s *Server) route() chi.Router {
 	restRoute := "/api/rest"
 	router.Mount(restRoute, s.initREST())
 
-	router.Get("/", func(rw http.ResponseWriter, r *http.Request) {
-		http.Redirect(rw, r, "/index/index.html", http.StatusSeeOther)
+	router.Route("/", func(r chi.Router) {
+		r.Get("/", renderHTML("index"))
+		r.Get("/index", renderHTML("index"))
+		r.Get("/dashboard", renderHTML("dashboard"))
+		r.Get("/dashboard/subdash", renderHTML("dashboard/subdash"))
+		r.Get("/subpage", renderHTML("subpage"))
 	})
-	router.Method("GET", "/*", http.FileServer(unindexed.Dir("./web/dist")))
+	router.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(unindexed.Dir("./web/dist/assets"))))
+
 	return router
+}
+
+func renderHTML(page string) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		f, err := os.Open(fmt.Sprintf("./web/dist/%s/index.html", page))
+		if err != nil {
+			log.Error().Err(err).Msg("open index")
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write([]byte("error"))
+			return
+		}
+		defer f.Close()
+		bt, err := io.ReadAll(f)
+		if err != nil {
+			log.Error().Err(err).Msg("open index")
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write([]byte("error"))
+			return
+		}
+		rw.Header().Add("application/type", "text/html")
+		rw.Write(bt)
+	}
 }
 
 func (s *Server) initOTO(rpcRoute string) http.Handler {
