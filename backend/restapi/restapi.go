@@ -10,7 +10,7 @@ import (
 
 	"github.com/fahmifan/smol/backend/config"
 	"github.com/fahmifan/smol/backend/datastore/sqlite"
-	"github.com/fahmifan/smol/backend/restapi/generated"
+	generated "github.com/fahmifan/smol/backend/restapi/gen"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/gorilla/sessions"
