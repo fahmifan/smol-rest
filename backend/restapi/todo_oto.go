@@ -28,6 +28,8 @@ func (s ServiceError) Error() string {
 		return "internal"
 	case ErrPermissionDenined:
 		return "permission_denied"
+	case ErrInvalidArgument:
+		return "invalid_argument"
 	}
 }
 

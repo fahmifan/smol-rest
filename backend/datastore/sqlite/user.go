@@ -25,14 +25,38 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
+type sqlScanner interface {
+	Scan(dest ...interface{}) error
+}
+
+// add space before & after column
+const userRowColumn = `
+
+	users.id,
+	users.name,
+	users.email,
+	users.role
+
+`
+
+func userRowScan(s sqlScanner, u *model.User) error {
+	return s.Scan(
+		&u.ID,
+		&u.Name,
+		&u.Email,
+		&u.Role,
+	)
+}
+
 func (s *SQLite) FindUserByEmail(ctx context.Context, email string) (model.User, error) {
-	row := s.DB.QueryRowContext(ctx, `SELECT id, name, email, role FROM users WHERE email = ?`, email)
+	query := `SELECT` + userRowColumn + `FROM users WHERE email = ?`
+	row := s.DB.QueryRowContext(ctx, query, email)
 	if err := row.Err(); err != nil {
 		return model.User{}, fmt.Errorf("unable to find user by email: %w", err)
 	}
 
 	user := model.User{}
-	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Role)
+	err := userRowScan(row, &user)
 	if errors.Is(err, sql.ErrNoRows) {
 		return model.User{}, ErrNotFound
 	}

@@ -5,6 +5,7 @@ type ServiceError int
 const (
 	ErrInternal          ServiceError = 1000
 	ErrPermissionDenined ServiceError = 1001
+	ErrInvalidArgument   ServiceError = 1002
 )
 
 func (s ServiceError) Error() string {
