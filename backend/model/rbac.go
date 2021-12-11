@@ -1,10 +1,7 @@
 package model
 
 import (
-	"log"
 	"sync"
-
-	"github.com/fahmifan/smol/backend/model/models"
 )
 
 // Role ..
@@ -87,7 +84,6 @@ func (r Role) granted(perm Permission) bool {
 		return false
 	}
 
-	log.Print(models.JSONS(cachePolicy))
 	return role[perm]
 }
 
