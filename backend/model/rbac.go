@@ -1,6 +1,11 @@
 package model
 
-import "sync"
+import (
+	"log"
+	"sync"
+
+	"github.com/fahmifan/smol/backend/model/models"
+)
 
 // Role ..
 type Role int
@@ -43,16 +48,19 @@ type Permission int
 const (
 	View_Dashboard Permission = iota
 	Create_Todo
+	View_AllSelfTodo
 )
 
 var policy = map[Role][]Permission{
 	RoleAdmin: {
 		View_Dashboard,
 		Create_Todo,
+		View_AllSelfTodo,
 	},
 	RoleUser: {
 		View_Dashboard,
 		Create_Todo,
+		View_AllSelfTodo,
 	},
 	RoleGuest: {},
 }
@@ -79,6 +87,7 @@ func (r Role) granted(perm Permission) bool {
 		return false
 	}
 
+	log.Print(models.JSONS(cachePolicy))
 	return role[perm]
 }
 
@@ -91,7 +100,10 @@ func init() {
 		cachePolicy = make(map[Role]map[Permission]bool)
 		for role, perms := range policy {
 			for _, perm := range perms {
-				cachePolicy[role] = map[Permission]bool{perm: true}
+				if cachePolicy[role] == nil {
+					cachePolicy[role] = map[Permission]bool{}
+				}
+				cachePolicy[role][perm] = true
 			}
 		}
 	})

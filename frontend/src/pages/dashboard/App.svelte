@@ -4,11 +4,11 @@
 </script>
 
 <main>
-  <a href="/dashboard">Dashboard</a>
-  <h1>Login</h1>
-  <a href="/api/rest/auth/login/oauth2?provider=google">Login With Google</a>
+  <h1>Add Todo</h1>
 
+  <a href="/">Home</a>
 
+  <Todo />
 </main>
 <style>
   :root {

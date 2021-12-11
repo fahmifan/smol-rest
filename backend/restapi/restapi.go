@@ -80,7 +80,6 @@ func (s *Server) route() chi.Router {
 		r.Get("/", renderHTML("index"))
 		r.Get("/index", renderHTML("index"))
 		r.Get("/dashboard", renderHTML("dashboard"))
-		r.Get("/dashboard/subdash", renderHTML("dashboard/subdash"))
 		r.Get("/subpage", renderHTML("subpage"))
 	})
 	router.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(unindexed.Dir("./web/dist/assets"))))

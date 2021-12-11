@@ -33,7 +33,7 @@ func (s *SQLite) SaveTodo(ctx context.Context, todo model.Todo) error {
 		INSERT INTO todos 
 		(id, user_id, detail, done) VALUES
 		( ?, 		?, 		?, 	 ?);`,
-		todo.ID.String(), todo.UserID, todo.Detail, todo.Done)
+		todo.ID.String(), todo.UserID.String(), todo.Detail, todo.Done)
 	if err != nil {
 		return fmt.Errorf("unable to saveTodo: %w", err)
 	}
@@ -56,4 +56,22 @@ func (s *SQLite) FindTodoByID(ctx context.Context, id string) (model.Todo, error
 	}
 
 	return todo, nil
+}
+
+func (s *SQLite) FindAllUserTodos(ctx context.Context, userID string) ([]model.Todo, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT`+todoRowColumn+`FROM todos WHERE user_id = ?`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to FindAllUserTodos: %w", err)
+	}
+
+	var todos []model.Todo
+	for rows.Next() {
+		todo := model.Todo{}
+		if err = todoRowScan(rows, &todo); err != nil {
+			return nil, fmt.Errorf("unable to scan todo: %w", err)
+		}
+		todos = append(todos, todo)
+	}
+
+	return todos, nil
 }

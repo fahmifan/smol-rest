@@ -11,6 +11,7 @@ import (
 
 type SmolService interface {
 	AddTodo(context.Context, AddTodoRequest) (*Todo, error)
+	FindAllTodos(context.Context, FindAllTodosFilter) (*Todos, error)
 }
 
 type smolServiceServer struct {
@@ -25,6 +26,7 @@ func RegisterSmolService(server *otohttp.Server, smolService SmolService) {
 		smolService: smolService,
 	}
 	server.Register("SmolService", "AddTodo", handler.handleAddTodo)
+	server.Register("SmolService", "FindAllTodos", handler.handleFindAllTodos)
 }
 
 func (s *smolServiceServer) handleAddTodo(w http.ResponseWriter, r *http.Request) {
@@ -44,9 +46,31 @@ func (s *smolServiceServer) handleAddTodo(w http.ResponseWriter, r *http.Request
 	}
 }
 
+func (s *smolServiceServer) handleFindAllTodos(w http.ResponseWriter, r *http.Request) {
+	var request FindAllTodosFilter
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.smolService.FindAllTodos(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
 type AddTodoRequest struct {
-	Item string `json:"item"`
-	Done bool   `json:"done"`
+	Detail string `json:"detail"`
+	Done   bool   `json:"done"`
+}
+
+type FindAllTodosFilter struct {
+	Page int `json:"page"`
+	Size int `json:"size"`
 }
 
 type Todo struct {
@@ -54,6 +78,12 @@ type Todo struct {
 	UserID string `json:"userID"`
 	Done   bool   `json:"done"`
 	Detail string `json:"detail"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+type Todos struct {
+	Todos []Todo `json:"todos"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

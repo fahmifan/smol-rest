@@ -86,7 +86,7 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 		}
 
 		s.session.PutUser(r.Context(), sess)
-		http.Redirect(rw, r, "/subpage", http.StatusSeeOther)
+		http.Redirect(rw, r, "/dashboard", http.StatusSeeOther)
 	}
 }
 

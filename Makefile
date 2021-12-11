@@ -10,7 +10,7 @@ oto:
 	@echo "generate ts client"
 	@mkdir -p web/src/service
 	@oto -template ./backend/restapi/definitions/templates/client.ts.plush \
-    	-out ./web/src/service/oto.gen.ts \
+    	-out ./frontend/src/service/oto.gen.ts \
     	-ignore Ignorer \
     	-pkg gen \
     	./backend/restapi/definitions
