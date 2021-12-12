@@ -14,8 +14,6 @@ func (s SmolService) FindCurrentUser(ctx context.Context, _ gen.Empty) (*gen.Use
 		return nil, nil
 	}
 
-	log.Info().Msg(sess.UserID.String())
-
 	user, err := s.DataStore.FindUserByID(ctx, sess.UserID)
 	if err != nil {
 		log.Error().Err(err).Msg("FindUserByID")
