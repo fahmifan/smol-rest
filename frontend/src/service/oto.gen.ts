@@ -78,6 +78,64 @@ export class SmolService {
 		})
 	}
 	
+		async findCurrentUser(empty?: Empty, modifyHeaders?: HeadersFunc): Promise<User> {
+		if (empty == null) {
+			empty = new Empty();
+		}
+		const headers: Headers = new Headers();
+		headers.set('Accept', 'application/json');
+		headers.set('Content-Type', 'application/json');
+		if (this.client.headers) {
+			await this.client.headers(headers);
+		}
+		if (modifyHeaders) {
+			await modifyHeaders(headers)
+		}
+		const response = await fetch(this.client.basepath + 'SmolService.FindCurrentUser', {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify(empty),
+		})
+		if (response.status !== 200) {
+			throw new Error(`SmolService.FindCurrentUser: ${response.status} ${response.statusText}`);
+		}
+		return response.json().then((json) => {
+			if (json.error) {
+				throw new Error(json.error);
+			}
+			return new User(json);
+		})
+	}
+	
+		async logoutUser(empty?: Empty, modifyHeaders?: HeadersFunc): Promise<Empty> {
+		if (empty == null) {
+			empty = new Empty();
+		}
+		const headers: Headers = new Headers();
+		headers.set('Accept', 'application/json');
+		headers.set('Content-Type', 'application/json');
+		if (this.client.headers) {
+			await this.client.headers(headers);
+		}
+		if (modifyHeaders) {
+			await modifyHeaders(headers)
+		}
+		const response = await fetch(this.client.basepath + 'SmolService.LogoutUser', {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify(empty),
+		})
+		if (response.status !== 200) {
+			throw new Error(`SmolService.LogoutUser: ${response.status} ${response.statusText}`);
+		}
+		return response.json().then((json) => {
+			if (json.error) {
+				throw new Error(json.error);
+			}
+			return new Empty(json);
+		})
+	}
+	
 }
 
 
@@ -100,6 +158,22 @@ export class AddTodoRequest {
 		detail: string = stringDefault;
 
 		done: boolean = booleanDefault;
+
+}
+
+export class Empty {
+	constructor(data?: any) {
+		if (data) {
+		
+			
+			this.error = data.error;
+			
+		
+		}
+	}
+
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	error: string = stringDefault;
 
 }
 
@@ -187,6 +261,40 @@ export class Todos {
 	}
 
 		todos?: Todo[];
+
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	error: string = stringDefault;
+
+}
+
+export class User {
+	constructor(data?: any) {
+		if (data) {
+		
+			
+			this.id = data.id;
+			
+		
+			
+			this.email = data.email;
+			
+		
+			
+			this.role = data.role;
+			
+		
+			
+			this.error = data.error;
+			
+		
+		}
+	}
+
+		id: string = stringDefault;
+
+		email: string = stringDefault;
+
+		role: string = stringDefault;
 
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	error: string = stringDefault;

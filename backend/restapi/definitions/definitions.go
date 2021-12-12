@@ -3,6 +3,16 @@ package definitions
 type SmolService interface {
 	AddTodo(AddTodoRequest) Todo
 	FindAllTodos(FindAllTodosFilter) Todos
+	FindCurrentUser(Empty) User
+	LogoutUser(Empty) Empty
+}
+
+type Empty struct{}
+
+type User struct {
+	ID    string
+	Email string
+	Role  string
 }
 
 type Todos struct {

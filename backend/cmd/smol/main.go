@@ -43,9 +43,10 @@ func serverCMD() *cobra.Command {
 			sqlite.Migrate(db)
 
 			server := restapi.NewServer(&restapi.ServerConfig{
-				Port:      config.Port(),
-				DB:        db,
-				DataStore: datastore,
+				Port:          config.Port(),
+				DB:            db,
+				DataStore:     datastore,
+				ServerBaseURL: config.ServerBaseURL(),
 			})
 			log.Info().Int("port", config.Port()).Msg("server runs")
 			sigChan := make(chan os.Signal, 1)

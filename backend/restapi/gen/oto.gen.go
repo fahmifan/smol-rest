@@ -12,6 +12,8 @@ import (
 type SmolService interface {
 	AddTodo(context.Context, AddTodoRequest) (*Todo, error)
 	FindAllTodos(context.Context, FindAllTodosFilter) (*Todos, error)
+	FindCurrentUser(context.Context, Empty) (*User, error)
+	LogoutUser(context.Context, Empty) (*Empty, error)
 }
 
 type smolServiceServer struct {
@@ -27,6 +29,8 @@ func RegisterSmolService(server *otohttp.Server, smolService SmolService) {
 	}
 	server.Register("SmolService", "AddTodo", handler.handleAddTodo)
 	server.Register("SmolService", "FindAllTodos", handler.handleFindAllTodos)
+	server.Register("SmolService", "FindCurrentUser", handler.handleFindCurrentUser)
+	server.Register("SmolService", "LogoutUser", handler.handleLogoutUser)
 }
 
 func (s *smolServiceServer) handleAddTodo(w http.ResponseWriter, r *http.Request) {
@@ -63,9 +67,48 @@ func (s *smolServiceServer) handleFindAllTodos(w http.ResponseWriter, r *http.Re
 	}
 }
 
+func (s *smolServiceServer) handleFindCurrentUser(w http.ResponseWriter, r *http.Request) {
+	var request Empty
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.smolService.FindCurrentUser(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *smolServiceServer) handleLogoutUser(w http.ResponseWriter, r *http.Request) {
+	var request Empty
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.smolService.LogoutUser(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
 type AddTodoRequest struct {
 	Detail string `json:"detail"`
 	Done   bool   `json:"done"`
+}
+
+type Empty struct {
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
 }
 
 type FindAllTodosFilter struct {
@@ -84,6 +127,14 @@ type Todo struct {
 
 type Todos struct {
 	Todos []Todo `json:"todos"`
+	// Error is string explaining what went wrong. Empty if everything was fine.
+	Error string `json:"error,omitempty"`
+}
+
+type User struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
 	// Error is string explaining what went wrong. Empty if everything was fine.
 	Error string `json:"error,omitempty"`
 }

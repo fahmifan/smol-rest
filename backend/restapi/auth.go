@@ -58,7 +58,7 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 			return
 		case nil:
 			sess = &Session{
-				UserID: oldUser.ID.String(),
+				UserID: oldUser.ID,
 				Role:   oldUser.Role,
 			}
 		case sqlite.ErrNotFound:
@@ -80,7 +80,7 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 			}
 
 			sess = &Session{
-				UserID: newUser.ID.String(),
+				UserID: newUser.ID,
 				Role:   newUser.Role,
 			}
 		}

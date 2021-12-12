@@ -7,8 +7,6 @@
   <a href="/dashboard">Dashboard</a>
   <h1>Login</h1>
   <a href="/api/rest/auth/login/oauth2?provider=google">Login With Google</a>
-
-
 </main>
 <style>
   :root {

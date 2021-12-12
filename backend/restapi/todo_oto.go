@@ -5,11 +5,10 @@ import (
 
 	"github.com/fahmifan/smol/backend/model"
 	"github.com/fahmifan/smol/backend/restapi/gen"
-	generated "github.com/fahmifan/smol/backend/restapi/gen"
 	"github.com/rs/zerolog/log"
 )
 
-var _ generated.SmolService = &SmolService{}
+var _ gen.SmolService = &SmolService{}
 
 type SmolService struct {
 	*Server
@@ -34,7 +33,7 @@ func (s ServiceError) Error() string {
 	}
 }
 
-func (g SmolService) AddTodo(ctx context.Context, r generated.AddTodoRequest) (*generated.Todo, error) {
+func (g SmolService) AddTodo(ctx context.Context, r gen.AddTodoRequest) (*gen.Todo, error) {
 	user := g.session.GetUser(ctx)
 	if !user.Role.GrantedAny(model.Create_Todo) {
 		return nil, ErrPermissionDenined
@@ -49,7 +48,7 @@ func (g SmolService) AddTodo(ctx context.Context, r generated.AddTodoRequest) (*
 		log.Error().Err(err).Msg("AddTodo")
 		return nil, ErrInternal
 	}
-	resp := &generated.Todo{
+	resp := &gen.Todo{
 		ID:     todo.ID.String(),
 		UserID: todo.UserID.String(),
 		Done:   todo.Done,
@@ -72,12 +71,12 @@ func (g SmolService) FindAllTodos(ctx context.Context, r gen.FindAllTodosFilter)
 
 	var res []gen.Todo
 	for _, todo := range todos {
-		res = append(res, generated.Todo{
+		res = append(res, gen.Todo{
 			ID:     todo.ID.String(),
 			UserID: todo.UserID.String(),
 			Done:   todo.Done,
 			Detail: todo.Detail,
 		})
 	}
-	return &generated.Todos{Todos: res}, nil
+	return &gen.Todos{Todos: res}, nil
 }

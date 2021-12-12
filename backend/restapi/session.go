@@ -9,12 +9,13 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/fahmifan/smol/backend/model"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/oklog/ulid/v2"
 )
 
 const userSessionKey = "user"
 
 type Session struct {
-	UserID string
+	UserID ulid.ULID
 	Role   model.Role
 }
 
@@ -45,4 +46,8 @@ func (s *SessionManager) GetUser(ctx context.Context) Session {
 
 func (s *SessionManager) PutUser(ctx context.Context, user *Session) {
 	s.session.Put(ctx, userSessionKey, user)
+}
+
+func (s *SessionManager) PopUser(ctx context.Context) {
+	_ = s.session.Pop(ctx, userSessionKey)
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/fahmifan/smol/backend/model"
+	"github.com/oklog/ulid/v2"
 )
 
 // add space before & after column
@@ -58,7 +59,7 @@ func (s *SQLite) FindTodoByID(ctx context.Context, id string) (model.Todo, error
 	return todo, nil
 }
 
-func (s *SQLite) FindAllUserTodos(ctx context.Context, userID string) ([]model.Todo, error) {
+func (s *SQLite) FindAllUserTodos(ctx context.Context, userID ulid.ULID) ([]model.Todo, error) {
 	rows, err := s.DB.QueryContext(ctx, `SELECT`+todoRowColumn+`FROM todos WHERE user_id = ?`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to FindAllUserTodos: %w", err)

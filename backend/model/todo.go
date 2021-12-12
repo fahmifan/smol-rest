@@ -9,11 +9,10 @@ type Todo struct {
 	Done   bool
 }
 
-func NewTodo(userID, detail string, done bool) Todo {
-	uid, _ := ulid.Parse(userID)
+func NewTodo(userID ulid.ULID, detail string, done bool) Todo {
 	return Todo{
 		ID:     NewID(),
-		UserID: uid,
+		UserID: userID,
 		Detail: detail,
 		Done:   done,
 	}

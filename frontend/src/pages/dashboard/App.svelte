@@ -1,12 +1,43 @@
 <script lang="ts">
-  import logo from "@/assets/svelte.png";
   import Todo from "@/components/Todo.svelte";
+  import { onMount } from "svelte";
+  import { User, Empty, SmolService, Client } from "../../service/oto.gen"
+  
+  const service = new SmolService(new Client())
+  let user: User
+
+  const logout = async () => {
+    try {
+      await service.logoutUser(new Empty())
+      console.log('success logout user')
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const findUser = async () => {
+    try {
+      const res = await service.findCurrentUser(new Empty())
+      if (!res) {
+        return
+      }
+      user = res
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  onMount(() => {
+    findUser()
+  })
+
 </script>
 
 <main>
-  <h1>Add Todo</h1>
+  <p>Hello {user && user.email}</p>
+  <button on:click={logout}>Logout</button>
 
-  <a href="/">Home</a>
+  <h1>Add Todo</h1>
 
   <Todo />
 </main>

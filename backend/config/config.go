@@ -34,3 +34,10 @@ func GoogleClientID() string {
 func GoogleClientSecret() string {
 	return mustLookupEnv("GOOGLE_CLIENT_SECRET")
 }
+
+func ServerBaseURL() string {
+	if baseURL := os.Getenv("SERVER_BASE_URL"); baseURL != "" {
+		return baseURL
+	}
+	return fmt.Sprintf("http://localhost:%d", Port())
+}

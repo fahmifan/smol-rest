@@ -7,9 +7,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/fahmifan/smol/backend/config"
 	"github.com/fahmifan/smol/backend/datastore/sqlite"
+	"github.com/fahmifan/smol/backend/model"
 	generated "github.com/fahmifan/smol/backend/restapi/gen"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -23,9 +25,11 @@ import (
 )
 
 type ServerConfig struct {
-	Port       int
-	DB         *sql.DB
-	DataStore  sqlite.SQLite
+	Port          int
+	DB            *sql.DB
+	DataStore     sqlite.SQLite
+	ServerBaseURL string
+
 	httpServer *http.Server
 	session    *SessionManager
 }
@@ -65,43 +69,83 @@ func (s *Server) route() chi.Router {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	baseURL := "http://localhost:9000/api/rest/auth/login/provider/callback?provider=google"
+	baseURL := strings.TrimSuffix(s.ServerBaseURL, "/") + "/api/rest/auth/login/provider/callback?provider=google"
 	cookieStore := sessions.NewCookieStore([]byte("secret"))
 	gothic.Store = cookieStore
 	goth.UseProviders(google.New(config.GoogleClientID(), config.GoogleClientSecret(), baseURL))
 
 	rpcRoute := "/api/oto"
-	router.Mount(rpcRoute, s.initOTO(rpcRoute))
+	router.Mount(rpcRoute, s.routeOTO(rpcRoute))
 
 	restRoute := "/api/rest"
-	router.Mount(restRoute, s.initREST())
+	router.Mount(restRoute, s.routeREST())
 
-	router.Route("/", func(r chi.Router) {
-		r.Get("/", renderHTML("index"))
-		r.Get("/index", renderHTML("index"))
-		r.Get("/dashboard", renderHTML("dashboard"))
-		r.Get("/subpage", renderHTML("subpage"))
+	router.Group(func(r chi.Router) {
+		r.Use(s.mdNonLoginOnly)
+		router.Get("/index", renderHTML("index"))
+		router.Get("/", renderHTML("index"))
 	})
-	router.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(unindexed.Dir("./web/dist/assets"))))
+	router.Group(func(r chi.Router) {
+		r.Use(s.mdLoginOnly)
+		r.Get("/dashboard", renderHTML("dashboard"))
+	})
+
+	router.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(unindexed.Dir("./frontend/dist/assets"))))
 
 	return router
 }
 
+func (s *Server) mdLoginOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		sess := s.session.GetUser(r.Context())
+		if sess.Role == model.RoleGuest {
+			http.Redirect(rw, r, "/", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(rw, r)
+	})
+}
+
+func (s *Server) mdNonLoginOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		sess := s.session.GetUser(r.Context())
+		if sess.Role != model.RoleGuest {
+			http.Redirect(rw, r, "/", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(rw, r)
+	})
+}
+
 func renderHTML(page string) http.HandlerFunc {
+	writeInternalErr := func(rw http.ResponseWriter) {
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Write([]byte("error"))
+	}
+
 	return func(rw http.ResponseWriter, r *http.Request) {
-		f, err := os.Open(fmt.Sprintf("./web/dist/%s/index.html", page))
+		f, err := os.Open(fmt.Sprintf("./frontend/dist/%s/index.html", page))
 		if err != nil {
-			log.Error().Err(err).Msg("open index")
-			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Write([]byte("error"))
+			writeInternalErr(rw)
 			return
 		}
 		defer f.Close()
+
+		s, err := f.Stat()
+		if err != nil {
+			writeInternalErr(rw)
+			return
+		}
+		if s.IsDir() {
+			rw.WriteHeader(http.StatusNotFound)
+			rw.Write([]byte("not found"))
+			return
+		}
+
 		bt, err := io.ReadAll(f)
 		if err != nil {
 			log.Error().Err(err).Msg("open index")
-			rw.WriteHeader(http.StatusInternalServerError)
-			rw.Write([]byte("error"))
+			writeInternalErr(rw)
 			return
 		}
 		rw.Header().Add("application/type", "text/html")
@@ -109,7 +153,7 @@ func renderHTML(page string) http.HandlerFunc {
 	}
 }
 
-func (s *Server) initOTO(rpcRoute string) http.Handler {
+func (s *Server) routeOTO(rpcRoute string) http.Handler {
 	greeter := SmolService{s}
 	server := otohttp.NewServer()
 	server.Basepath = fmtBasepath(rpcRoute)
@@ -117,7 +161,7 @@ func (s *Server) initOTO(rpcRoute string) http.Handler {
 	return server
 }
 
-func (s *Server) initREST() http.Handler {
+func (s *Server) routeREST() http.Handler {
 	router := chi.NewRouter()
 	router.Get("/ping", s.handlePing())
 	router.Get("/auth/login/oauth2", s.handleLoginProvider())
