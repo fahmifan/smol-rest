@@ -60,7 +60,7 @@ func (s *SQLite) FindTodoByID(ctx context.Context, id string) (model.Todo, error
 }
 
 func (s *SQLite) FindAllUserTodos(ctx context.Context, userID ulid.ULID) ([]model.Todo, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT`+todoRowColumn+`FROM todos WHERE user_id = ?`, userID)
+	rows, err := s.DB.QueryContext(ctx, `SELECT`+todoRowColumn+`FROM todos WHERE user_id = ?`, userID.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to FindAllUserTodos: %w", err)
 	}
