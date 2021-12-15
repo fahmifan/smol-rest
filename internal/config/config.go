@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fahmifan/smol/backend/model/models"
+	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/joho/godotenv"
 )
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
-	"github.com/fahmifan/smol/backend/model"
+	"github.com/fahmifan/smol/internal/model"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/oklog/ulid/v2"
 )

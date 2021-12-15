@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/fahmifan/smol/backend/model"
+	"github.com/fahmifan/smol/internal/model"
 	"github.com/oklog/ulid/v2"
 )
 

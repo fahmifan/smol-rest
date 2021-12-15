@@ -3,8 +3,8 @@ package restapi
 import (
 	"context"
 
-	"github.com/fahmifan/smol/backend/model"
-	"github.com/fahmifan/smol/backend/restapi/gen"
+	"github.com/fahmifan/smol/internal/model"
+	"github.com/fahmifan/smol/internal/restapi/gen"
 	"github.com/rs/zerolog/log"
 )
 

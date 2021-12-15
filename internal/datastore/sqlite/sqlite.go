@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	_ "embed"
 
-	"github.com/fahmifan/smol/backend/model/models"
+	"github.com/fahmifan/smol/internal/model/models"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 )

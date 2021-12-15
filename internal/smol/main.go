@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/fahmifan/smol/backend/config"
-	"github.com/fahmifan/smol/backend/datastore/sqlite"
-	"github.com/fahmifan/smol/backend/restapi"
+	"github.com/fahmifan/smol/internal/config"
+	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/restapi"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"

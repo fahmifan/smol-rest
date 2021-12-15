@@ -3,9 +3,9 @@ package restapi
 import (
 	"net/http"
 
-	"github.com/fahmifan/smol/backend/datastore/sqlite"
-	"github.com/fahmifan/smol/backend/model"
-	"github.com/fahmifan/smol/backend/model/models"
+	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/model"
+	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/markbates/goth/gothic"
 	"github.com/rs/zerolog/log"
 )
