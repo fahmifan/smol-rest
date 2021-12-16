@@ -43,7 +43,6 @@ func (p *Postgres) CreateSession(ctx context.Context, sess model.Session) error 
 	}
 	return nil
 }
-
 func (p *Postgres) FindSessionByRefreshToken(ctx context.Context, token string) (model.Session, error) {
 	sess := model.Session{}
 	row := p.DB.QueryRow(ctx, `SELECT`+sessionRowColumn+`FROM "sessions" WHERE refresh_token = $1`, token)
