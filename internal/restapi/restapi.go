@@ -166,6 +166,10 @@ func (s *Server) routeREST() http.Handler {
 	router.Get("/ping", s.handlePing())
 	router.Get("/auth/login/oauth2", s.handleLoginProvider())
 	router.Get("/auth/login/provider/callback", s.handleLoginProviderCallback())
+	router.Group(func(r chi.Router) {
+		r.Use(s.authorizedAny())
+		r.Post("/auth/refresh", s.handleRefreshToken())
+	})
 	return router
 }
 

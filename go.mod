@@ -7,6 +7,7 @@ require (
 	github.com/alexedwards/scs/v2 v2.5.0
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/cors v1.2.0
+	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/gorilla/sessions v1.1.1
 	github.com/joho/godotenv v1.4.0
 	github.com/jordan-wright/unindexed v0.0.0-20181209214434-78fa79113c0f

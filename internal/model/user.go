@@ -16,6 +16,10 @@ type User struct {
 	DeletedAt *time.Time
 }
 
+func (u User) IsEmpty() bool {
+	return u.ID.String() == ""
+}
+
 func NewUser(role Role, name, email string) (User, error) {
 	switch role {
 	case RoleGuest:

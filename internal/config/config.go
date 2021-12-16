@@ -41,3 +41,8 @@ func ServerBaseURL() string {
 	}
 	return fmt.Sprintf("http://localhost:%d", Port())
 }
+
+func JWTSecret() string {
+	// TODO implement
+	return ""
+}

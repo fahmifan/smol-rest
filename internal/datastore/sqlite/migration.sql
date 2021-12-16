@@ -1,9 +1,3 @@
-CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
-    data BLOB NOT NULL,
-    expiry REAL NOT NULL
-);
-	
 CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expiry);
 
 CREATE TABLE IF NOT EXISTS users (
@@ -19,3 +13,11 @@ CREATE TABLE IF NOT EXISTS todos (
     user_id TEXT NOT NULL,
     done BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE TABLE IF NOT EXISTS "sessions" (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    refresh_token_expired_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL
+)

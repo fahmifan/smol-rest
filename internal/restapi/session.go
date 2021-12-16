@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/gob"
+	"time"
 
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
@@ -15,8 +16,9 @@ import (
 const userSessionKey = "user"
 
 type Session struct {
-	UserID ulid.ULID
-	Role   model.Role
+	UserID    ulid.ULID
+	Role      model.Role
+	ExpiredAt time.Time
 }
 
 func init() {

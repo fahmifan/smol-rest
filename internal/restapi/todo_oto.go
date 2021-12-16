@@ -10,33 +10,10 @@ import (
 
 var _ gen.SmolService = &SmolService{}
 
-type SmolService struct {
-	*Server
-}
-
-type ServiceError int
-
-const (
-	ErrInternal          ServiceError = 1000
-	ErrPermissionDenined ServiceError = 1001
-	ErrInvalidArgument   ServiceError = 1002
-)
-
-func (s ServiceError) Error() string {
-	switch s {
-	default: // ErrInternal
-		return "internal"
-	case ErrPermissionDenined:
-		return "permission_denied"
-	case ErrInvalidArgument:
-		return "invalid_argument"
-	}
-}
-
 func (g SmolService) AddTodo(ctx context.Context, r gen.AddTodoRequest) (*gen.Todo, error) {
 	user := g.session.GetUser(ctx)
 	if !user.Role.GrantedAny(model.Create_Todo) {
-		return nil, ErrPermissionDenined
+		return nil, ErrPermissionDenied
 	}
 	todo := model.NewTodo(
 		user.UserID,
@@ -60,7 +37,7 @@ func (g SmolService) AddTodo(ctx context.Context, r gen.AddTodoRequest) (*gen.To
 func (g SmolService) FindAllTodos(ctx context.Context, r gen.FindAllTodosFilter) (*gen.Todos, error) {
 	sess := g.session.GetUser(ctx)
 	if !sess.Role.GrantedAny(model.View_AllSelfTodo) {
-		return nil, ErrPermissionDenined
+		return nil, ErrPermissionDenied
 	}
 
 	todos, err := g.DataStore.FindAllUserTodos(ctx, sess.UserID)
