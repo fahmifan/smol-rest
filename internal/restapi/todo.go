@@ -7,6 +7,7 @@ import (
 
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
+	"github.com/rs/zerolog/log"
 )
 
 type AddTodoRequest struct {
@@ -57,6 +58,12 @@ func (s *Server) handleCreateTodo() http.HandlerFunc {
 
 		ctx := r.Context()
 		user := getUserFromCtx(ctx)
+		if user.IsEmpty() {
+			log.Debug().Msg(models.JSONS(user))
+			httpError(rw, ErrNotFound)
+			return
+		}
+
 		todo := model.NewTodo(
 			user.ID,
 			req.Detail,

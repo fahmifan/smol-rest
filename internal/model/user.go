@@ -17,7 +17,7 @@ type User struct {
 }
 
 func (u User) IsEmpty() bool {
-	return u.ID.String() == ""
+	return u.ID.String() == ulid.ULID{}.String()
 }
 
 func NewUser(role Role, name, email string) (User, error) {

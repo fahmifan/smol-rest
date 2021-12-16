@@ -92,10 +92,15 @@ func httpError(rw http.ResponseWriter, err error) {
 	writeJSON(rw, statusCode, ErrRes{Error: svcErr.Error(), Code: svcErr})
 }
 
-const userSessionCtxKey = "user_session"
+type ctxKey string
+
+const userSessionCtxKey ctxKey = "user_session"
 
 func getUserFromCtx(c context.Context) model.User {
 	res := c.Value(userSessionCtxKey)
+	if res == nil {
+		return model.User{}
+	}
 	if val, ok := res.(model.User); ok {
 		return val
 	}
@@ -103,6 +108,6 @@ func getUserFromCtx(c context.Context) model.User {
 	return model.User{}
 }
 
-func setUserToCtx(c context.Context, user model.User) {
-	context.WithValue(c, userSessionCtxKey, user)
+func setUserToCtx(c context.Context, user model.User) context.Context {
+	return context.WithValue(c, userSessionCtxKey, user)
 }

@@ -196,8 +196,7 @@ func (s *Server) mdAuthorizedAny(perms ...model.Permission) func(next http.Handl
 				httpError(rw, ErrNotFound)
 				return
 			}
-
-			setUserToCtx(r.Context(), user)
+			r = r.WithContext(setUserToCtx(r.Context(), user))
 			if !user.Role.GrantedAny(perms...) {
 				httpError(rw, nil)
 				return
