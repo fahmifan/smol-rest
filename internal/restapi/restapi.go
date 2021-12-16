@@ -2,7 +2,6 @@ package restapi
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,7 +11,7 @@ import (
 	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
 
 	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -25,8 +24,7 @@ import (
 
 type ServerConfig struct {
 	Port          int
-	DB            *sql.DB
-	DataStore     sqlite.SQLite
+	DataStore     datastore.DataStore
 	ServerBaseURL string
 	EnableSwagger bool
 

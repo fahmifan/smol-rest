@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/datastore/postgres"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/fahmifan/smol/internal/restapi"
 	"github.com/rs/zerolog"
@@ -46,17 +46,15 @@ func serverCMD() *cobra.Command {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		enableSwagger := models.StringToBool(cmd.Flag("enable-swagger").Value.String())
-		db := sqlite.MustOpen()
-		defer db.Close()
+		dbPool := postgres.MustOpen()
+		defer dbPool.Close()
 
-		datastore := sqlite.SQLite{DB: db}
-
-		sqlite.Migrate(db)
+		postgres.Migrate(dbPool)
+		dataStore := &postgres.Postgres{DB: dbPool}
 
 		server := restapi.NewServer(&restapi.ServerConfig{
 			Port:          config.Port(),
-			DB:            db,
-			DataStore:     datastore,
+			DataStore:     dataStore,
 			ServerBaseURL: config.ServerBaseURL(),
 			EnableSwagger: enableSwagger,
 		})
