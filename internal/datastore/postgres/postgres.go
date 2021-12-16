@@ -2,9 +2,10 @@ package postgres
 
 import (
 	"context"
-	"os"
+	_ "embed"
 	"time"
 
+	"github.com/fahmifan/smol/internal/config"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -29,9 +30,8 @@ func Migrate(conn *pgxpool.Pool) {
 }
 
 func MustOpen() *pgxpool.Pool {
-	connPool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	connPool, err := pgxpool.Connect(context.Background(), config.PostgresDSN())
 	models.PanicErr(err)
-
 	return connPool
 }
 

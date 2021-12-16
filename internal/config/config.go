@@ -45,3 +45,7 @@ func ServerBaseURL() string {
 func JWTSecret() string {
 	return mustLookupEnv("JWT_SECRET")
 }
+
+func PostgresDSN() string {
+	return mustLookupEnv("POSTGRES_DSN")
+}

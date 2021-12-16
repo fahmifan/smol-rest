@@ -32,15 +32,15 @@ func userRowScan(s SqlScanner, u *model.User) error {
 
 func (p *Postgres) SaveUser(ctx context.Context, user model.User) error {
 	_, err := p.DB.Exec(ctx, `INSERT INTO 
-		users (id, name, email, role) 
+		"users" (id, name, email, role) 
 		VALUES ($1, $2, $3, $4);`,
-		user.ID, user.Name, user.Email, user.Role,
+		user.ID.String(), user.Name, user.Email, user.Role,
 	)
 	return err
 }
 
 func (p *Postgres) FindUserByEmail(ctx context.Context, email string) (model.User, error) {
-	query := `SELECT` + userRowColumn + `FROM users WHERE email = ?`
+	query := `SELECT` + userRowColumn + `FROM users WHERE email = $1`
 	row := p.DB.QueryRow(ctx, query, email)
 	user := model.User{}
 	err := userRowScan(row, &user)
@@ -54,7 +54,7 @@ func (p *Postgres) FindUserByEmail(ctx context.Context, email string) (model.Use
 }
 
 func (p *Postgres) FindUserByID(ctx context.Context, id ulid.ULID) (model.User, error) {
-	query := `SELECT` + userRowColumn + `FROM users WHERE id = ?`
+	query := `SELECT` + userRowColumn + `FROM users WHERE id = $1`
 	row := p.DB.QueryRow(ctx, query, id.String())
 	user := model.User{}
 	err := userRowScan(row, &user)

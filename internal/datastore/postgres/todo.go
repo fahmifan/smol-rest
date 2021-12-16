@@ -57,7 +57,7 @@ func (s *Postgres) FindTodoByID(ctx context.Context, id string) (model.Todo, err
 }
 
 func (s *Postgres) FindAllUserTodos(ctx context.Context, userID ulid.ULID) ([]model.Todo, error) {
-	rows, err := s.DB.Query(ctx, `SELECT`+todoRowColumn+`FROM todos WHERE user_id = ?`, userID.String())
+	rows, err := s.DB.Query(ctx, `SELECT`+todoRowColumn+`FROM todos WHERE user_id = $1`, userID.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to FindAllUserTodos: %w", err)
 	}

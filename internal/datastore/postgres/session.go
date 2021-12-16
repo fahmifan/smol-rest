@@ -36,13 +36,14 @@ func (p *Postgres) CreateSession(ctx context.Context, sess model.Session) error 
 	_, err := p.DB.Exec(ctx, `INSERT INTO "sessions" 
 		(id, user_id, refresh_token_expired_at, refresh_token, created_at) VALUES
 		($1,		$2,						 $3, 			$4,			$5)`,
-		sess.ID, sess.UserID, sess.RefreshTokenExpiredAt, sess.RefreshToken, sess.CreatedAt,
+		sess.ID.String(), sess.UserID.String(), sess.RefreshTokenExpiredAt, sess.RefreshToken, sess.CreatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("unable to insert session: %w", err)
 	}
 	return nil
 }
+
 func (p *Postgres) FindSessionByRefreshToken(ctx context.Context, token string) (model.Session, error) {
 	sess := model.Session{}
 	row := p.DB.QueryRow(ctx, `SELECT`+sessionRowColumn+`FROM "sessions" WHERE refresh_token = $1`, token)

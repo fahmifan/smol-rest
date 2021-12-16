@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/rs/zerolog/log"
@@ -71,7 +71,7 @@ func httpError(rw http.ResponseWriter, err error) {
 			svcErr = ErrInternal
 		case model.ErrInvalidArgument:
 			svcErr = ErrInvalidArgument
-		case sqlite.ErrNotFound:
+		case datastore.ErrNotFound:
 			svcErr = ErrNotFound
 		}
 	}

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/markbates/goth/gothic"
@@ -65,26 +65,23 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 		oldUser, err := s.DataStore.FindUserByEmail(ctx, guser.Email)
 		switch err {
 		default:
-			log.Error().Err(err).Msg("save user")
-			writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInternal.Error()})
+			httpError(rw, err)
 			return
 		case nil:
 			user = oldUser
-		case sqlite.ErrNotFound:
+		case datastore.ErrNotFound:
 			guserRawData := &GoogleUserRawData{}
 			guserRawData.Parse(guser.RawData)
 
 			newUser, err := model.NewUser(model.RoleUser, guser.Name, guserRawData.Email)
 			if err != nil {
-				log.Error().Err(err).Msg("create new user")
-				writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInvalidArgument.Error()})
+				httpError(rw, err)
 				return
 			}
 
 			err = s.DataStore.SaveUser(ctx, newUser)
 			if err != nil {
-				log.Error().Err(err).Msg("save user")
-				writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInvalidArgument.Error()})
+				httpError(rw, err)
 				return
 			}
 			user = newUser
@@ -138,7 +135,7 @@ func (s *Server) handleRefreshToken() http.HandlerFunc {
 
 		ctx := r.Context()
 		oldSess, err := s.DataStore.FindSessionByRefreshToken(ctx, req.RT)
-		if errors.Is(err, sqlite.ErrNotFound) {
+		if errors.Is(err, datastore.ErrNotFound) {
 			httpError(rw, err)
 			return
 		}
