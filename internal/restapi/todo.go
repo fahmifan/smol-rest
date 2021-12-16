@@ -46,6 +46,16 @@ func (f *FindAllTodoRequest) ParseQuery(query url.Values) {
 	f.Size = models.StringToInt(query.Get("size"))
 }
 
+// Create Todo godoc
+// @Summary create a new todo
+// @Description currently it only support one session per user
+// @ID Login
+// @Accept json
+// @Produce json
+// @Param user body AddTodoRequest true "add todo request"
+// @Success 200 {object} Todo
+// @Failure 400 {object} ErrorResponse
+// @Router /api/todos [post]
 func (s *Server) handleCreateTodo() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := AddTodoRequest{}

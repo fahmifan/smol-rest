@@ -56,6 +56,11 @@ func httpOK(rw http.ResponseWriter, res interface{}) {
 	writeJSON(rw, http.StatusOK, res)
 }
 
+type ErrorResponse struct {
+	Error string       `json:"error"`
+	Code  ServiceError `json:"code"`
+}
+
 func httpError(rw http.ResponseWriter, err error) {
 	var svcErr ServiceError
 	if svc, ok := err.(ServiceError); ok {
@@ -87,11 +92,7 @@ func httpError(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusUnauthorized
 	}
 
-	type ErrRes struct {
-		Error string       `json:"error"`
-		Code  ServiceError `json:"code"`
-	}
-	writeJSON(rw, statusCode, ErrRes{Error: svcErr.Error(), Code: svcErr})
+	writeJSON(rw, statusCode, ErrorResponse{Error: svcErr.Error(), Code: svcErr})
 }
 
 type ctxKey string
