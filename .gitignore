@@ -3,3 +3,4 @@ smol_sqlite3.db-shm
 smol_sqlite3.db-wal
 
 .env
+smol.http

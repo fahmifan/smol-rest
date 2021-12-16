@@ -1,5 +1,3 @@
-CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expiry);
-
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     "name" TEXT,
@@ -18,6 +16,8 @@ CREATE TABLE IF NOT EXISTS "sessions" (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     refresh_token TEXT NOT NULL,
-    refresh_token_expired_at TIMESTAMP NOT NULL
+    refresh_token_expired_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL
-)
+);
+
+CREATE INDEX IF NOT EXISTS sessions_refresh_token ON "sessions"(refresh_token);

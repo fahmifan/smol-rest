@@ -93,23 +93,25 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 		expiredAt := time.Now().Add(time.Hour * 30)
 		refreshToken, err := generateRefreshToken(user.ID, expiredAt)
 		if err != nil {
-			log.Error().Err(err).Msg("generate refresh token")
-			writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInternal.Error()})
+			httpError(rw, err)
 			return
 		}
 
 		accessToken, err := generateAccessToken(user, time.Now().Add(time.Hour))
 		if err != nil {
-			log.Error().Err(err).Msg("create access token")
-			writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInternal.Error()})
+			httpError(rw, err)
 			return
 		}
 
-		sessModel := model.NewSession(user.ID, refreshToken, expiredAt)
+		sessModel, err := model.NewSession(user.ID, refreshToken, expiredAt)
+		if err != nil {
+			httpError(rw, err)
+			return
+		}
+
 		err = s.DataStore.CreateSession(ctx, sessModel)
 		if err != nil {
-			log.Error().Err(err).Msg("create session")
-			writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInternal.Error()})
+			httpError(rw, err)
 			return
 		}
 
@@ -130,42 +132,45 @@ func (s *Server) handleRefreshToken() http.HandlerFunc {
 		defer r.Body.Close()
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			httpError(rw, err, ErrInternal)
+			httpError(rw, err)
 			return
 		}
 
 		ctx := r.Context()
 		oldSess, err := s.DataStore.FindSessionByRefreshToken(ctx, req.RT)
 		if errors.Is(err, sqlite.ErrNotFound) {
-			httpError(rw, err, ErrNotFound)
+			httpError(rw, err)
 			return
 		}
 		if err != nil {
-			httpError(rw, err, ErrInternal)
+			httpError(rw, err)
 			return
 		}
 
 		user, err := s.DataStore.FindUserByID(ctx, oldSess.UserID)
 		if err != nil {
-			httpError(rw, err, ErrNotFound)
+			httpError(rw, err)
 			return
 		}
 
 		refreshToken, err := generateRefreshToken(user.ID, newAccessTokenExpireTime())
 		if err != nil {
-			httpError(rw, err, ErrInternal)
+			httpError(rw, err)
 			return
 		}
 
-		newSess := model.NewSession(user.ID, refreshToken, newRefreshTokenExpireTime())
+		newSess, err := model.NewSession(user.ID, refreshToken, newRefreshTokenExpireTime())
+		if err != nil {
+			httpError(rw, err)
+		}
 		err = s.DataStore.CreateSession(ctx, newSess)
 		if err != nil {
-			httpError(rw, err, ErrInternal)
+			httpError(rw, err)
 			return
 		}
 		accessToken, err := generateAccessToken(user, newAccessTokenExpireTime())
 		if err != nil {
-			httpError(rw, err, ErrInternal)
+			httpError(rw, err)
 			return
 		}
 
@@ -176,30 +181,25 @@ func (s *Server) handleRefreshToken() http.HandlerFunc {
 	}
 }
 
-func (s *Server) authorizedAny(perms ...model.Permission) func(next http.Handler) http.Handler {
+func (s *Server) mdAuthorizedAny(perms ...model.Permission) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			token, err := parseTokenFromHeader(r.Header)
 			if err != nil {
 				log.Error().Err(err).Msg("unable parse token from header")
-				httpError(rw, err, ErrInvalidArgument)
+				httpError(rw, err)
 				return
 			}
 
 			user, ok := auth(token)
 			if !ok {
-				httpError(rw, nil, ErrUnauthorized)
+				httpError(rw, ErrNotFound)
 				return
 			}
 
 			setUserToCtx(r.Context(), user)
-			if user.IsEmpty() {
-				httpError(rw, nil, ErrUnauthorized)
-				return
-			}
-
 			if !user.Role.GrantedAny(perms...) {
-				httpError(rw, nil, ErrPermissionDenied)
+				httpError(rw, nil)
 				return
 			}
 

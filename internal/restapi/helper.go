@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/fahmifan/smol/internal/datastore/sqlite"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/rs/zerolog/log"
@@ -55,19 +56,26 @@ func httpOK(rw http.ResponseWriter, res interface{}) {
 	writeJSON(rw, http.StatusOK, res)
 }
 
-func httpError(rw http.ResponseWriter, err error, svcErr ServiceError) {
-	type ErrRes struct {
-		Error string       `json:"error"`
-		Code  ServiceError `json:"code"`
-	}
-	if err != nil {
-		log.Error().Err(err).Msg("")
+func httpError(rw http.ResponseWriter, err error) {
+	var svcErr ServiceError
+	if svc, ok := err.(ServiceError); ok {
+		svcErr = svc
+	} else {
+		switch err {
+		default:
+			svcErr = ErrInternal
+		case model.ErrInvalidArgument:
+			svcErr = ErrInvalidArgument
+		case sqlite.ErrNotFound:
+			svcErr = ErrNotFound
+		}
 	}
 
 	var statusCode int
 	switch svcErr {
 	// default ErrInternal
 	default:
+		log.Error().Err(err).Msg("")
 		statusCode = http.StatusInternalServerError
 	case ErrInvalidArgument:
 		statusCode = http.StatusBadRequest
@@ -77,11 +85,17 @@ func httpError(rw http.ResponseWriter, err error, svcErr ServiceError) {
 		statusCode = http.StatusNotFound
 	}
 
+	type ErrRes struct {
+		Error string       `json:"error"`
+		Code  ServiceError `json:"code"`
+	}
 	writeJSON(rw, statusCode, ErrRes{Error: svcErr.Error(), Code: svcErr})
 }
 
+const userSessionCtxKey = "user_session"
+
 func getUserFromCtx(c context.Context) model.User {
-	res := c.Value(userSessionKey)
+	res := c.Value(userSessionCtxKey)
 	if val, ok := res.(model.User); ok {
 		return val
 	}
@@ -90,5 +104,5 @@ func getUserFromCtx(c context.Context) model.User {
 }
 
 func setUserToCtx(c context.Context, user model.User) {
-	context.WithValue(c, userSessionKey, user)
+	context.WithValue(c, userSessionCtxKey, user)
 }
