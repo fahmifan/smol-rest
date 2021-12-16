@@ -43,6 +43,5 @@ func ServerBaseURL() string {
 }
 
 func JWTSecret() string {
-	// TODO implement
-	return ""
+	return mustLookupEnv("JWT_SECRET")
 }

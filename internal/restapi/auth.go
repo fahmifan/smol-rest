@@ -187,13 +187,13 @@ func (s *Server) mdAuthorizedAny(perms ...model.Permission) func(next http.Handl
 			token, err := parseTokenFromHeader(r.Header)
 			if err != nil {
 				log.Error().Err(err).Msg("unable parse token from header")
-				httpError(rw, err)
+				httpError(rw, ErrUnauthorized)
 				return
 			}
 
 			user, ok := auth(token)
 			if !ok {
-				httpError(rw, ErrNotFound)
+				httpError(rw, ErrUnauthorized)
 				return
 			}
 			r = r.WithContext(setUserToCtx(r.Context(), user))

@@ -80,9 +80,11 @@ func httpError(rw http.ResponseWriter, err error) {
 	case ErrInvalidArgument:
 		statusCode = http.StatusBadRequest
 	case ErrPermissionDenied:
-		statusCode = http.StatusUnauthorized
+		statusCode = http.StatusForbidden
 	case ErrNotFound:
 		statusCode = http.StatusNotFound
+	case ErrUnauthorized:
+		statusCode = http.StatusUnauthorized
 	}
 
 	type ErrRes struct {
