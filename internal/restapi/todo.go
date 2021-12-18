@@ -46,8 +46,9 @@ type PaginationRequest struct {
 	Size     uint64 `json:"size"`
 }
 
-type ResponseWithPaging struct {
-	Data       interface{}        `json:"data"`
+type ResponseWithPagination struct {
+	// Will contains array of any object
+	Data       interface{}        `json:"data" swaggertype:"array,object"`
 	Pagination PaginationResponse `json:"pagination,omitempty"`
 }
 
@@ -124,7 +125,7 @@ type FindAllTodosRequest struct {
 // @Accept json
 // @Produce json
 // @Param user body FindAllTodosRequest true "find all todos request"
-// @Success 200 {object} ResponseWithPaging
+// @Success 200 {object} ResponseWithPagination
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [get]
 func (s *Server) HandleFindAllTodos() http.HandlerFunc {
@@ -174,7 +175,7 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 			}
 		}
 
-		res := ResponseWithPaging{
+		res := ResponseWithPagination{
 			Data: resTodos,
 			Pagination: NewPaginationResponse(
 				cursor,
