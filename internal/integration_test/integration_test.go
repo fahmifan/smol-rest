@@ -107,7 +107,7 @@ func listTodos(t *testing.T) []restapi.Todo {
 		nil,
 	)
 	assert.NoError(t, err)
-	req.Header.Set("Content-Type", "aaplication/json")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+integrationCfg.AccessToken)
 
 	res, err := client.Do(req)
