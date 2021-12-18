@@ -85,7 +85,7 @@ func (s *Server) router() http.Handler {
 	router.Get("/ping", s.handlePing())
 	router.Get("/auth/login/oauth2", s.HandleLoginProvider())
 	router.Get("/auth/login/provider/callback", s.HandleLoginProviderCallback())
-	router.Method("POST", "/auth/refresh", s.mdAuthorizedAny()(s.HandleRefreshToken()))
+	router.Post("/auth/refresh", s.HandleRefreshToken())
 
 	router.Method("POST", "/todos", s.mdAuthorizedAny(model.Create_Todo)(s.HandleCreateTodo()))
 	router.Method("GET", "/todos", s.mdAuthorizedAny(model.View_AllSelfTodo)(s.HandleFindAllTodos()))

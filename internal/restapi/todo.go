@@ -139,7 +139,10 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 			return
 		}
 
-		log.Debug().Interface("req", req).Msg("")
+		if req.Pagination.Backward && req.Pagination.Cursor == "" {
+			jsonError(rw, ErrInvalidArgument, "cannot backward without cursor")
+			return
+		}
 
 		user := getUserFromCtx(ctx)
 		todos, count, err := s.DataStore.FindAllUserTodos(ctx, user.ID, datastore.FindAllTodoFilter{

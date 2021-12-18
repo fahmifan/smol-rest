@@ -60,11 +60,14 @@ func jsonOK(rw http.ResponseWriter, res interface{}) {
 }
 
 type ErrorResponse struct {
-	Error string    `json:"error"`
-	Code  ErrorCode `json:"code"`
+	Error   string    `json:"error"`
+	Code    ErrorCode `json:"code"`
+	Message string    `json:"message,omitempty"`
 }
 
-func jsonError(rw http.ResponseWriter, err error) {
+// jsonError write error with a message
+// the variadic msg param will only used the index 0 value
+func jsonError(rw http.ResponseWriter, err error, msgs ...string) {
 	var svcErr ErrorCode
 	if svc, ok := err.(ErrorCode); ok {
 		svcErr = svc
@@ -97,7 +100,16 @@ func jsonError(rw http.ResponseWriter, err error) {
 		statusCode = http.StatusUnauthorized
 	}
 
-	writeJSON(rw, statusCode, ErrorResponse{Error: svcErr.Error(), Code: svcErr})
+	var msg string
+	if len(msgs) > 0 {
+		msg = msgs[0]
+	}
+
+	writeJSON(rw, statusCode, ErrorResponse{
+		Error:   svcErr.Error(),
+		Code:    svcErr,
+		Message: msg,
+	})
 }
 
 type ctxKey string

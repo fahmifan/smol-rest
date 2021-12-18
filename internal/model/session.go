@@ -15,7 +15,17 @@ type Session struct {
 	CreatedAt             time.Time
 }
 
-func (s Session) IsExpired() bool {
+func (s *Session) SetRefreshToken(token string, expiredAt time.Time) error {
+	if token == "" || expiredAt.IsZero() {
+		return ErrInvalidArgument
+	}
+
+	s.RefreshToken = token
+	s.RefreshTokenExpiredAt = expiredAt
+	return nil
+}
+
+func (s *Session) IsExpired() bool {
 	return time.Now().After(s.RefreshTokenExpiredAt)
 }
 
@@ -23,18 +33,10 @@ var ErrInvalidArgument = errors.New("invalid arguments")
 
 func NewSession(
 	userID ulid.ULID,
-	refreshToken string,
-	refreshTokenExpiredAt time.Time,
 ) (sess Session, err error) {
-	if refreshToken == "" || refreshTokenExpiredAt.IsZero() {
-		return sess, ErrInvalidArgument
-	}
-
 	return Session{
-		ID:                    NewID(),
-		UserID:                userID,
-		RefreshToken:          refreshToken,
-		RefreshTokenExpiredAt: refreshTokenExpiredAt,
-		CreatedAt:             time.Now(),
+		ID:        NewID(),
+		UserID:    userID,
+		CreatedAt: time.Now(),
 	}, nil
 }

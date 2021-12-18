@@ -2,6 +2,7 @@ package restapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -85,20 +86,24 @@ func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 			user = newUser
 		}
 
-		expiredAt := newRefreshTokenExpireTime()
-		refreshToken, err := generateRefreshToken(user.ID, expiredAt)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
 		accessToken, err := generateAccessToken(user, time.Now().Add(time.Hour))
 		if err != nil {
 			jsonError(rw, err)
 			return
 		}
 
-		sessModel, err := model.NewSession(user.ID, refreshToken, expiredAt)
+		sessModel, err := model.NewSession(user.ID)
+		if err != nil {
+			jsonError(rw, err)
+			return
+		}
+		expiredAt := newRefreshTokenExpireTime()
+		refreshToken, err := generateRefreshToken(user.ID, expiredAt)
+		if err != nil {
+			jsonError(rw, err)
+			return
+		}
+		err = sessModel.SetRefreshToken(refreshToken, expiredAt)
 		if err != nil {
 			jsonError(rw, err)
 			return
@@ -128,6 +133,12 @@ func (s *Server) HandleRefreshToken() http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			jsonError(rw, err)
+			return
+		}
+
+		_, err = parseRefreshToken(req.RT)
+		if err != nil {
+			jsonError(rw, fmt.Errorf("unable to parse refresh token: %w", err))
 			return
 		}
 
@@ -289,6 +300,33 @@ func generateRefreshToken(userID ulid.ULID, expiredAt time.Time) (string, error)
 	}
 
 	return rt, nil
+}
+
+func parseRefreshToken(token string) (sessID ulid.ULID, err error) {
+	claims := jwt.MapClaims{}
+	tkn, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("")
+		return sessID, err
+	}
+
+	if tkn != nil && !tkn.Valid {
+		return sessID, ErrInvalidToken
+	}
+
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		return sessID, ErrInvalidToken
+	}
+	log.Debug().Str("sub", sub).Msg("")
+
+	sessID, err = ulid.Parse(sub)
+	if err != nil {
+		return sessID, fmt.Errorf("unable to parse sub into sessID: %w", err)
+	}
+	return
 }
 
 func parseJWTToken(token string) (claims Claims, err error) {
