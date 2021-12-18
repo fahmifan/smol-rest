@@ -62,7 +62,7 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 		defer r.Body.Close()
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			httpError(rw, err)
+			jsonError(rw, err)
 			return
 		}
 
@@ -70,7 +70,7 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 		user := getUserFromCtx(ctx)
 		if user.IsEmpty() {
 			log.Debug().Msg(models.JSONS(user))
-			httpError(rw, ErrNotFound)
+			jsonError(rw, ErrNotFound)
 			return
 		}
 
@@ -81,7 +81,7 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 		)
 		err = s.DataStore.SaveTodo(ctx, todo)
 		if err != nil {
-			httpError(rw, err)
+			jsonError(rw, err)
 			return
 		}
 
@@ -92,7 +92,7 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 			Detail: todo.Detail,
 		}
 
-		httpOK(rw, resp)
+		jsonOK(rw, resp)
 	}
 }
 
@@ -103,7 +103,7 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 		user := getUserFromCtx(ctx)
 		todos, err := s.DataStore.FindAllUserTodos(ctx, user.ID)
 		if err != nil {
-			httpError(rw, err)
+			jsonError(rw, err)
 			return
 		}
 
@@ -117,6 +117,6 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 			})
 		}
 
-		httpOK(rw, res)
+		jsonOK(rw, res)
 	}
 }

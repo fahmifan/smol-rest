@@ -52,7 +52,7 @@ func writeJSON(rw http.ResponseWriter, status int, body interface{}) {
 	rw.Write(models.JSON(body))
 }
 
-func httpOK(rw http.ResponseWriter, res interface{}) {
+func jsonOK(rw http.ResponseWriter, res interface{}) {
 	writeJSON(rw, http.StatusOK, res)
 }
 
@@ -61,7 +61,7 @@ type ErrorResponse struct {
 	Code  ServiceError `json:"code"`
 }
 
-func httpError(rw http.ResponseWriter, err error) {
+func jsonError(rw http.ResponseWriter, err error) {
 	var svcErr ServiceError
 	if svc, ok := err.(ServiceError); ok {
 		svcErr = svc
