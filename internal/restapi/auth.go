@@ -7,8 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore/sqlite"
+	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/markbates/goth/gothic"
@@ -33,7 +32,7 @@ func (g *GoogleUserRawData) Parse(m Map) {
 	g.Picture = m["picture"].(string)
 }
 
-func (s *Server) handleLoginProvider() http.HandlerFunc {
+func (s *Server) HandleLoginProvider() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if _, err := gothic.CompleteUserAuth(rw, r); err == nil {
 			log.Error().Err(err).Msg("")
@@ -51,7 +50,7 @@ type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`
 }
 
-func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
+func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		guser, err := gothic.CompleteUserAuth(rw, r)
 		if err != nil {
@@ -65,26 +64,23 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 		oldUser, err := s.DataStore.FindUserByEmail(ctx, guser.Email)
 		switch err {
 		default:
-			log.Error().Err(err).Msg("save user")
-			writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInternal.Error()})
+			httpError(rw, err)
 			return
 		case nil:
 			user = oldUser
-		case sqlite.ErrNotFound:
+		case datastore.ErrNotFound:
 			guserRawData := &GoogleUserRawData{}
 			guserRawData.Parse(guser.RawData)
 
 			newUser, err := model.NewUser(model.RoleUser, guser.Name, guserRawData.Email)
 			if err != nil {
-				log.Error().Err(err).Msg("create new user")
-				writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInvalidArgument.Error()})
+				httpError(rw, err)
 				return
 			}
 
 			err = s.DataStore.SaveUser(ctx, newUser)
 			if err != nil {
-				log.Error().Err(err).Msg("save user")
-				writeJSON(rw, http.StatusBadRequest, Map{"error": ErrInvalidArgument.Error()})
+				httpError(rw, err)
 				return
 			}
 			user = newUser
@@ -123,7 +119,7 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleRefreshToken() http.HandlerFunc {
+func (s *Server) HandleRefreshToken() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := struct {
 			RT string `json:"refreshToken"`
@@ -138,7 +134,7 @@ func (s *Server) handleRefreshToken() http.HandlerFunc {
 
 		ctx := r.Context()
 		oldSess, err := s.DataStore.FindSessionByRefreshToken(ctx, req.RT)
-		if errors.Is(err, sqlite.ErrNotFound) {
+		if errors.Is(err, datastore.ErrNotFound) {
 			httpError(rw, err)
 			return
 		}
@@ -242,7 +238,11 @@ func newRefreshTokenExpireTime() time.Time {
 }
 
 // Create the JWT key used to create the signature
-var jwtKey = []byte(config.JWTSecret())
+var jwtKey []byte
+
+func SetJWTKey(s string) {
+	jwtKey = []byte(s)
+}
 
 // Claims jwt claim
 type Claims struct {

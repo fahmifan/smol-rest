@@ -6,10 +6,13 @@ import (
 
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func init() {
 	models.LogErr(godotenv.Load(".env"))
+	InitLogger()
 }
 
 func mustLookupEnv(key string) string {
@@ -18,6 +21,13 @@ func mustLookupEnv(key string) string {
 		models.PanicErr(fmt.Errorf("env not found %s", key))
 	}
 	return val
+}
+
+func InitLogger() {
+	log.Logger = zerolog.New(zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: zerolog.TimeFieldFormat,
+	}).With().Timestamp().Caller().Logger()
 }
 
 func Port() int {
@@ -44,4 +54,8 @@ func ServerBaseURL() string {
 
 func JWTSecret() string {
 	return mustLookupEnv("JWT_SECRET")
+}
+
+func PostgresDSN() string {
+	return mustLookupEnv("POSTGRES_DSN")
 }
