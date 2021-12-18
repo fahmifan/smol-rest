@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fahmifan/smol/internal/config"
 	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/golang-jwt/jwt/v4"
@@ -239,7 +238,11 @@ func newRefreshTokenExpireTime() time.Time {
 }
 
 // Create the JWT key used to create the signature
-var jwtKey = []byte(config.JWTSecret())
+var jwtKey []byte
+
+func SetJWTKey(s string) {
+	jwtKey = []byte(s)
+}
 
 // Claims jwt claim
 type Claims struct {

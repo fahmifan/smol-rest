@@ -6,3 +6,5 @@ smol_sqlite3.db-wal
 smol.http
 swagger/*
 bin/*
+
+integration.cfg.json

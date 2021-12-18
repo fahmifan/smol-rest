@@ -10,7 +10,6 @@ import (
 	"github.com/fahmifan/smol/internal/datastore/postgres"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/fahmifan/smol/internal/restapi"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -32,11 +31,6 @@ func main() {
 }
 
 func serverCMD() *cobra.Command {
-	log.Logger = zerolog.New(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: zerolog.TimeFieldFormat,
-	}).With().Timestamp().Caller().Logger()
-
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "run web server",
@@ -52,6 +46,7 @@ func serverCMD() *cobra.Command {
 		postgres.Migrate(dbPool)
 		dataStore := &postgres.Postgres{DB: dbPool}
 
+		restapi.SetJWTKey(config.JWTSecret())
 		server := restapi.NewServer(&restapi.ServerConfig{
 			Port:          config.Port(),
 			DataStore:     dataStore,
