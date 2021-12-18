@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// login url: http://localhost:8000/api/auth/login/provider/callback?provider=google
+// login url: http://localhost:8000/api/auth/login/oauth2?provider=google
 // run the test in single thread top down sequential
 var client = http.DefaultClient
 var baseURL = config.ServerBaseURL()
@@ -26,7 +26,10 @@ var integrationCfg = struct {
 	RefreshToken string `json:"refreshToken"`
 }{}
 
-const maxBytes = 2 * 1024
+const MB = 1024 * 1024
+
+// 2 MB
+const maxBytes = 2 * MB
 
 func init() {
 	config.InitLogger()
