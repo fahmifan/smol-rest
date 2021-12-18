@@ -69,12 +69,12 @@ func (s *Postgres) FindAllUserTodos(ctx context.Context, userID ulid.ULID, filte
 		return
 	}
 
-	sqData := baseBuilder.Columns(todoColumns...).Limit(uint64(filter.GetSize()))
+	sqData := baseBuilder.Columns(todoColumns...).Limit(uint64(filter.GetSize())).OrderBy("id ASC")
 	if filter.Cursor != "" {
 		if filter.Backward {
-			sqData = sqData.Where("id < ?", filter.Cursor)
+			sqData = sqData.Where("id < ?", filter.Cursor).OrderBy("id DESC")
 		} else {
-			sqData = sqData.Where("id > ?", filter.Cursor)
+			sqData = sqData.Where("id > ?", filter.Cursor).OrderBy("id ASC")
 		}
 	}
 

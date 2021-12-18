@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS todos (
     done BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+CREATE INDEX IF NOT EXISTS todos_user_idx ON "todos"(user_id);
+
 CREATE TABLE IF NOT EXISTS "sessions" (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,

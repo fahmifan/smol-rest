@@ -1,7 +1,6 @@
 package restapi
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
@@ -11,52 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func DecodeCursor(enc string) (dec string) {
-	if enc == "" {
-		return
-	}
-	bt, _ := base64.StdEncoding.DecodeString(enc)
-	return string(bt)
-}
-
-func EncodeCursor(raw string) string {
-	return base64.StdEncoding.EncodeToString([]byte(raw))
-}
-
-type PaginationResponse struct {
-	Cursor   string `json:"cursor"`
-	Backward bool   `json:"backward"`
-	HasNext  bool   `json:"hasNext"`
-	Count    uint64 `json:"count"`
-	Size     uint64 `json:"size"`
-}
-
-func NewPaginationResponse(cursor string, backward bool, count uint64, size uint64, lenData int) PaginationResponse {
-	return PaginationResponse{
-		Cursor:   cursor,
-		Backward: backward,
-		Count:    count,
-		HasNext:  lenData > 0,
-	}
-}
-
-type PaginationRequest struct {
-	Cursor   string `json:"cursor"`
-	Backward bool   `json:"backward"`
-	Size     uint64 `json:"size"`
-}
-
-type ResponseWithPagination struct {
-	// Will contains array of any object
-	Data       interface{}        `json:"data" swaggertype:"array,object"`
-	Pagination PaginationResponse `json:"pagination,omitempty"`
-}
-
-type AddTodoRequest struct {
-	Detail string `json:"detail"`
-	Done   bool   `json:"done"`
-}
-
 type Todo struct {
 	ID     string `json:"id"`
 	UserID string `json:"userID"`
@@ -64,10 +17,19 @@ type Todo struct {
 	Detail string `json:"detail"`
 }
 
-// Create Todo godoc
+type AddTodoRequest struct {
+	Detail string `json:"detail"`
+	Done   bool   `json:"done"`
+}
+
+type FindAllTodosRequest struct {
+	Pagination PaginationRequest `json:"pagination"`
+}
+
+// CreateTodo ..
 // @Summary create a new todo
 // @Description currently it only support one session per user
-// @ID Login
+// @ID CreateTodo
 // @Accept json
 // @Produce json
 // @Param user body AddTodoRequest true "add todo request"
@@ -114,17 +76,13 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 	}
 }
 
-type FindAllTodosRequest struct {
-	Pagination PaginationRequest `json:"pagination"`
-}
-
 // FindAllTodos ..
 // @Summary find all todos
 // @Description find all todos
 // @ID FindAllTodos
 // @Accept json
 // @Produce json
-// @Param user body FindAllTodosRequest true "find all todos request"
+// @Param pagination body FindAllTodosRequest true "find all todos request"
 // @Success 200 {object} ResponseWithPagination
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [get]

@@ -1,6 +1,8 @@
 package model
 
-import "github.com/oklog/ulid/v2"
+import (
+	"github.com/oklog/ulid/v2"
+)
 
 type Todo struct {
 	ID     ulid.ULID
