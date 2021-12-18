@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"time"
 
-	"github.com/fahmifan/smol/internal/config"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -29,8 +28,8 @@ func Migrate(conn *pgxpool.Pool) {
 	log.Info().Int64("rowsAffected", rows).Msg("Migrate sqlite3")
 }
 
-func MustOpen() *pgxpool.Pool {
-	connPool, err := pgxpool.Connect(context.Background(), config.PostgresDSN())
+func MustOpen(dsn string) *pgxpool.Pool {
+	connPool, err := pgxpool.Connect(context.Background(), dsn)
 	models.PanicErr(err)
 	return connPool
 }

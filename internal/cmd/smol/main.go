@@ -46,7 +46,7 @@ func serverCMD() *cobra.Command {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		enableSwagger := models.StringToBool(cmd.Flag("enable-swagger").Value.String())
-		dbPool := postgres.MustOpen()
+		dbPool := postgres.MustOpen(config.PostgresDSN())
 		defer dbPool.Close()
 
 		postgres.Migrate(dbPool)

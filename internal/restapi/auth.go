@@ -33,7 +33,7 @@ func (g *GoogleUserRawData) Parse(m Map) {
 	g.Picture = m["picture"].(string)
 }
 
-func (s *Server) handleLoginProvider() http.HandlerFunc {
+func (s *Server) HandleLoginProvider() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if _, err := gothic.CompleteUserAuth(rw, r); err == nil {
 			log.Error().Err(err).Msg("")
@@ -51,7 +51,7 @@ type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`
 }
 
-func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
+func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		guser, err := gothic.CompleteUserAuth(rw, r)
 		if err != nil {
@@ -120,7 +120,7 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleRefreshToken() http.HandlerFunc {
+func (s *Server) HandleRefreshToken() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := struct {
 			RT string `json:"refreshToken"`

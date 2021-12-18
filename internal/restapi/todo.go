@@ -56,7 +56,7 @@ func (f *FindAllTodoRequest) ParseQuery(query url.Values) {
 // @Success 200 {object} Todo
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [post]
-func (s *Server) handleCreateTodo() http.HandlerFunc {
+func (s *Server) HandleCreateTodo() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := AddTodoRequest{}
 		defer r.Body.Close()
@@ -96,7 +96,7 @@ func (s *Server) handleCreateTodo() http.HandlerFunc {
 	}
 }
 
-func (s *Server) handleFindAllTodos() http.HandlerFunc {
+func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
