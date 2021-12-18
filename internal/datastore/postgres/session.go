@@ -54,7 +54,7 @@ func (p *Postgres) FindSessionByRefreshToken(ctx context.Context, token string) 
 	return sess, nil
 }
 
-func (p *Postgres) DeleteSessionByID(ctx context.Context, id ulid.ULID) error {
-	_, err := p.DB.Exec(ctx, `DELETE FROM "sessions" WHERE id = $1`, id)
+func (p *Postgres) DeleteSessionByUserID(ctx context.Context, userID ulid.ULID) error {
+	_, err := p.DB.Exec(ctx, `DELETE FROM "sessions" WHERE user_id = $1`, userID)
 	return fmt.Errorf("unable to delete session: %w", err)
 }

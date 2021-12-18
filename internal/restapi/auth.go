@@ -2,7 +2,6 @@ package restapi
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -86,7 +85,7 @@ func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 			user = newUser
 		}
 
-		expiredAt := time.Now().Add(time.Hour * 30)
+		expiredAt := newRefreshTokenExpireTime()
 		refreshToken, err := generateRefreshToken(user.ID, expiredAt)
 		if err != nil {
 			jsonError(rw, err)
@@ -134,12 +133,13 @@ func (s *Server) HandleRefreshToken() http.HandlerFunc {
 
 		ctx := r.Context()
 		oldSess, err := s.DataStore.FindSessionByRefreshToken(ctx, req.RT)
-		if errors.Is(err, datastore.ErrNotFound) {
+		if err != nil {
 			jsonError(rw, err)
 			return
 		}
-		if err != nil {
-			jsonError(rw, err)
+
+		if oldSess.IsExpired() {
+			jsonError(rw, ErrRefreshTokenExpired)
 			return
 		}
 
@@ -149,21 +149,6 @@ func (s *Server) HandleRefreshToken() http.HandlerFunc {
 			return
 		}
 
-		refreshToken, err := generateRefreshToken(user.ID, newAccessTokenExpireTime())
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
-		newSess, err := model.NewSession(user.ID, refreshToken, newRefreshTokenExpireTime())
-		if err != nil {
-			jsonError(rw, err)
-		}
-		err = s.DataStore.CreateSession(ctx, newSess)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
 		accessToken, err := generateAccessToken(user, newAccessTokenExpireTime())
 		if err != nil {
 			jsonError(rw, err)
@@ -171,9 +156,23 @@ func (s *Server) HandleRefreshToken() http.HandlerFunc {
 		}
 
 		jsonOK(rw, LoginResponse{
-			RefreshToken: newSess.RefreshToken,
+			RefreshToken: oldSess.RefreshToken,
 			AccessToken:  accessToken,
 		})
+	}
+}
+
+func (s *Server) HandleLogout() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		user := getUserFromCtx(ctx)
+		err := s.DataStore.DeleteSessionByUserID(ctx, user.ID)
+		if err != nil {
+			jsonError(rw, err)
+			return
+		}
+
+		jsonOK(rw, Map{"status": "success"})
 	}
 }
 

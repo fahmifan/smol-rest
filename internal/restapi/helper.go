@@ -14,19 +14,20 @@ type SmolService struct {
 	*Server
 }
 
-type ServiceError int
+type ErrorCode int
 
 const (
-	ErrInternal                   ServiceError = 1000
-	ErrPermissionDenied           ServiceError = 1001
-	ErrInvalidArgument            ServiceError = 1002
-	ErrNotFound                   ServiceError = 1003
-	ErrMissingAuthorizationHeader ServiceError = 1004
-	ErrUnauthorized               ServiceError = 1005
-	ErrInvalidToken               ServiceError = 1006
+	ErrInternal                   ErrorCode = 1000
+	ErrPermissionDenied           ErrorCode = 1001
+	ErrInvalidArgument            ErrorCode = 1002
+	ErrNotFound                   ErrorCode = 1003
+	ErrMissingAuthorizationHeader ErrorCode = 1004
+	ErrUnauthorized               ErrorCode = 1005
+	ErrInvalidToken               ErrorCode = 1006
+	ErrRefreshTokenExpired        ErrorCode = 1007
 )
 
-func (s ServiceError) Error() string {
+func (s ErrorCode) Error() string {
 	switch s {
 	default: // ErrInternal
 		return "internal"
@@ -42,6 +43,8 @@ func (s ServiceError) Error() string {
 		return "unauthorized"
 	case ErrInvalidToken:
 		return "invalid_token"
+	case ErrRefreshTokenExpired:
+		return "Refresh_token_expired"
 	}
 }
 
@@ -57,13 +60,13 @@ func jsonOK(rw http.ResponseWriter, res interface{}) {
 }
 
 type ErrorResponse struct {
-	Error string       `json:"error"`
-	Code  ServiceError `json:"code"`
+	Error string    `json:"error"`
+	Code  ErrorCode `json:"code"`
 }
 
 func jsonError(rw http.ResponseWriter, err error) {
-	var svcErr ServiceError
-	if svc, ok := err.(ServiceError); ok {
+	var svcErr ErrorCode
+	if svc, ok := err.(ErrorCode); ok {
 		svcErr = svc
 	} else {
 		switch err {
@@ -78,17 +81,19 @@ func jsonError(rw http.ResponseWriter, err error) {
 
 	var statusCode int
 	switch svcErr {
-	// default ErrInternal
 	default:
+		log.Error().Int("code", int(svcErr)).Err(err).Msg("unknown code")
+		statusCode = http.StatusInternalServerError
+	case ErrInternal:
 		log.Error().Err(err).Msg("")
 		statusCode = http.StatusInternalServerError
-	case ErrInvalidArgument:
+	case ErrInvalidArgument, ErrInvalidToken, ErrRefreshTokenExpired:
 		statusCode = http.StatusBadRequest
 	case ErrPermissionDenied:
 		statusCode = http.StatusForbidden
 	case ErrNotFound:
 		statusCode = http.StatusNotFound
-	case ErrUnauthorized:
+	case ErrUnauthorized, ErrMissingAuthorizationHeader:
 		statusCode = http.StatusUnauthorized
 	}
 

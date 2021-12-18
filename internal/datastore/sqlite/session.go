@@ -65,9 +65,9 @@ func (s *SQLite) FindSessionByRefreshToken(ctx context.Context, token string) (m
 	return sess, nil
 }
 
-func (s *SQLite) DeleteSessionByID(ctx context.Context, id ulid.ULID) error {
-	q := `DELETE FROM "sessions" WHERE id = ?`
-	_, err := s.DB.ExecContext(ctx, q, id)
+func (s *SQLite) DeleteSessionByUserID(ctx context.Context, userID ulid.ULID) error {
+	q := `DELETE FROM "sessions" WHERE user_id = ?`
+	_, err := s.DB.ExecContext(ctx, q, userID)
 	if err != nil {
 		return fmt.Errorf("unable to find session by refresh token")
 	}

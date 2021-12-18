@@ -15,6 +15,10 @@ type Session struct {
 	CreatedAt             time.Time
 }
 
+func (s Session) IsExpired() bool {
+	return time.Now().After(s.RefreshTokenExpiredAt)
+}
+
 var ErrInvalidArgument = errors.New("invalid arguments")
 
 func NewSession(
