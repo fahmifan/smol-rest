@@ -1,0 +1,59 @@
+# set the env variables into .env file
+@userID = {{$dotenv USER_ID}}
+@refreshToken = {{$dotenv REFRESH_TOKEN}}
+@accessToken = {{$dotenv ACCESS_TOKEN}}
+@host = http://localhost:8000
+
+# Ping
+GET {{host}}/api/ping
+
+###
+
+# Login
+# You should click the url, it will open google oauth2 page
+GET http://localhost:8000/api/auth/login/oauth2?provider=google&action=register
+
+###
+
+# Logout
+GET http://localhost:8000/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+###
+
+# Create Todo
+POST {{host}}/api/todos
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "detail": "hello meow",
+    "done": false
+}
+
+###
+
+# Refresh Token
+POST {{host}}/api/auth/refresh
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "refreshToken": "{{refreshToken}}"
+}
+
+###
+
+# List Todos
+GET {{host}}/api/todos
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+    "pagination": {
+        "cursor": "",
+        "backward": false,
+        "size": 10
+    }
+}

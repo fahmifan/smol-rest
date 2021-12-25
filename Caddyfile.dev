@@ -1,0 +1,7 @@
+{
+    auto_https off
+}
+
+:9000 {
+    reverse_proxy /api/* localhost:8000
+}
