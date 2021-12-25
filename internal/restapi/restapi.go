@@ -89,8 +89,9 @@ func (s *Server) router() http.Handler {
 	router.Get("/auth/login/provider/callback", s.handleLoginProviderCallback())
 	router.Post("/auth/refresh", s.handleRefreshToken())
 
-	router.Method("POST", "/todos", s.mdAuthorizedAny(rbac.Create_Todo)(s.handleCreateTodo()))
-	router.Method("GET", "/todos", s.mdAuthorizedAny(rbac.View_AllSelfTodo)(s.handleFindAllTodos()))
+	router.Method(http.MethodGet, "/auth/logout", s.mdAuthorizedAny()(s.handleLogout()))
+	router.Method(http.MethodPost, "/todos", s.mdAuthorizedAny(rbac.Create_Todo)(s.handleCreateTodo()))
+	router.Method(http.MethodGet, "/todos", s.mdAuthorizedAny(rbac.View_AllSelfTodo)(s.handleFindAllTodos()))
 
 	return router
 }

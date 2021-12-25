@@ -150,7 +150,7 @@ func (s *Server) mdAuthorizedAny(perms ...rbac.Permission) func(next http.Handle
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			token, err := parseTokenFromHeader(r.Header)
 			if err != nil {
-				jsonError(rw, ErrUnauthorized)
+				jsonError(rw, err)
 				return
 			}
 
@@ -160,6 +160,11 @@ func (s *Server) mdAuthorizedAny(perms ...rbac.Permission) func(next http.Handle
 				return
 			}
 			r = r.WithContext(setUserToCtx(r.Context(), user))
+			if len(perms) == 0 {
+				next.ServeHTTP(rw, r)
+				return
+			}
+
 			if !user.Role.GrantedAny(perms...) {
 				jsonError(rw, nil)
 				return
