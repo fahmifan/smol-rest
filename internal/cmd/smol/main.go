@@ -8,8 +8,10 @@ import (
 
 	"github.com/fahmifan/smol/internal/config"
 	"github.com/fahmifan/smol/internal/datastore/postgres"
+	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/fahmifan/smol/internal/restapi"
+	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -43,15 +45,21 @@ func serverCMD() *cobra.Command {
 		dbPool := postgres.MustOpen(config.PostgresDSN())
 		defer dbPool.Close()
 
-		postgres.Migrate(dbPool)
-		dataStore := &postgres.Postgres{DB: dbPool}
+		sqlcpg.Migrate(dbPool)
+
+		queries := sqlcpg.New(dbPool)
+		auther := &usecase.Auther{
+			JWTKey:  []byte(config.JWTSecret()),
+			Queries: queries,
+		}
 
 		restapi.SetJWTKey(config.JWTSecret())
 		server := restapi.NewServer(&restapi.ServerConfig{
 			Port:          config.Port(),
-			DataStore:     dataStore,
 			ServerBaseURL: config.ServerBaseURL(),
 			EnableSwagger: enableSwagger,
+			Auther:        auther,
+			Queries:       queries,
 		})
 		log.Info().Int("port", config.Port()).Msg("server runs")
 		sigChan := make(chan os.Signal, 1)

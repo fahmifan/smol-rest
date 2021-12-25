@@ -1,15 +1,19 @@
 package restapi
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/fahmifan/smol/internal/datastore"
+	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model"
+	"github.com/fahmifan/smol/internal/rbac"
+	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/jackc/pgx/v4"
 	"github.com/markbates/goth/gothic"
 	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog/log"
@@ -58,68 +62,45 @@ func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 			return
 		}
 
-		var user model.User
 		ctx := r.Context()
-
-		oldUser, err := s.DataStore.FindUserByEmail(ctx, guser.Email)
+		_, err = s.Queries.FindUserByEmail(ctx, guser.Email)
 		switch err {
-		default:
-			jsonError(rw, err)
-			return
 		case nil:
-			user = oldUser
-		case datastore.ErrNotFound:
+			sess, err := s.Auther.LoginFromGoth(ctx, guser)
+			if err != nil {
+				jsonError(rw, err)
+				return
+			}
+
+			jsonOK(rw, LoginResponse{
+				UserID:       sess.UserID,
+				RefreshToken: sess.RefreshToken,
+				AccessToken:  sess.AccessToken,
+			})
+
+		case sql.ErrNoRows, pgx.ErrNoRows:
 			guserRawData := &GoogleUserRawData{}
 			guserRawData.Parse(guser.RawData)
 
-			newUser, err := model.NewUser(model.RoleUser, guser.Name, guserRawData.Email)
+			sess, err := s.Auther.RegisterFromGoth(ctx, usecase.RegisterParams{
+				Role:  rbac.RoleUser,
+				Email: guserRawData.Email,
+				Name:  guser.Name,
+			})
 			if err != nil {
 				jsonError(rw, err)
 				return
 			}
 
-			err = s.DataStore.SaveUser(ctx, newUser)
-			if err != nil {
-				jsonError(rw, err)
-				return
-			}
-			user = newUser
-		}
-
-		accessToken, err := generateAccessToken(user, time.Now().Add(time.Hour))
-		if err != nil {
+			jsonOK(rw, LoginResponse{
+				UserID:       sess.UserID,
+				RefreshToken: sess.RefreshToken,
+				AccessToken:  sess.AccessToken,
+			})
+		default:
 			jsonError(rw, err)
 			return
 		}
-
-		sessModel, err := model.NewSession(user.ID)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-		expiredAt := newRefreshTokenExpireTime()
-		refreshToken, err := generateRefreshToken(user.ID, expiredAt)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-		err = sessModel.SetRefreshToken(refreshToken, expiredAt)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
-		err = s.DataStore.CreateSession(ctx, sessModel)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
-		writeJSON(rw, http.StatusOK, LoginResponse{
-			UserID:       user.ID.String(),
-			RefreshToken: refreshToken,
-			AccessToken:  accessToken,
-		})
 	}
 }
 
@@ -136,48 +117,30 @@ func (s *Server) HandleRefreshToken() http.HandlerFunc {
 			return
 		}
 
-		_, err = parseRefreshToken(req.RT)
-		if err != nil {
-			jsonError(rw, fmt.Errorf("unable to parse refresh token: %w", err))
-			return
-		}
-
 		ctx := r.Context()
-		oldSess, err := s.DataStore.FindSessionByRefreshToken(ctx, req.RT)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
-		if oldSess.IsExpired() {
-			jsonError(rw, ErrRefreshTokenExpired)
-			return
-		}
-
-		user, err := s.DataStore.FindUserByID(ctx, oldSess.UserID)
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
-		accessToken, err := generateAccessToken(user, newAccessTokenExpireTime())
+		sess, err := s.Auther.RefreshToken(ctx, req.RT)
 		if err != nil {
 			jsonError(rw, err)
 			return
 		}
 
 		jsonOK(rw, LoginResponse{
-			RefreshToken: oldSess.RefreshToken,
-			AccessToken:  accessToken,
+			UserID:       sess.UserID,
+			RefreshToken: sess.RefreshToken,
+			AccessToken:  sess.AccessToken,
 		})
 	}
+}
+
+func IsExpired(s sqlcpg.Session) bool {
+	return time.Now().After(s.RefreshTokenExpiredAt)
 }
 
 func (s *Server) HandleLogout() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		user := getUserFromCtx(ctx)
-		err := s.DataStore.DeleteSessionByUserID(ctx, user.ID)
+		_, err := s.Queries.DeleteSessionByUserID(ctx, user.ID)
 		if err != nil {
 			jsonError(rw, err)
 			return
@@ -187,7 +150,7 @@ func (s *Server) HandleLogout() http.HandlerFunc {
 	}
 }
 
-func (s *Server) mdAuthorizedAny(perms ...model.Permission) func(next http.Handler) http.Handler {
+func (s *Server) mdAuthorizedAny(perms ...rbac.Permission) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			token, err := parseTokenFromHeader(r.Header)
@@ -263,8 +226,8 @@ type Claims struct {
 }
 
 // GetRoleModel ..
-func (c Claims) GetRoleModel() model.Role {
-	return model.ParseRole(c.Role)
+func (c Claims) GetRoleModel() rbac.Role {
+	return rbac.ParseRole(c.Role)
 }
 
 func generateAccessToken(user model.User, expiredAt time.Time) (string, error) {
@@ -344,20 +307,19 @@ func parseJWTToken(token string) (claims Claims, err error) {
 	return claims, nil
 }
 
-func auth(token string) (model.User, bool) {
+func auth(token string) (sqlcpg.User, bool) {
 	claims, err := parseJWTToken(token)
 	if err != nil {
 		log.Error().Err(err).Msg("parse jwt")
-		return model.User{}, false
+		return sqlcpg.User{}, false
 	}
 
-	id, err := ulid.Parse(claims.ID)
 	if err != nil {
 		log.Error().Err(err).Msg("parse id")
-		return model.User{}, false
+		return sqlcpg.User{}, false
 	}
-	user := model.User{
-		ID:    id,
+	user := sqlcpg.User{
+		ID:    claims.ID,
 		Email: claims.Email,
 		Role:  claims.GetRoleModel(),
 	}

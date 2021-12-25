@@ -3,10 +3,13 @@ module github.com/fahmifan/smol
 go 1.17
 
 require (
+	github.com/Masterminds/squirrel v1.5.2
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/cors v1.2.0
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/gorilla/sessions v1.2.1
+	github.com/jackc/pgconn v1.10.1
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/joho/godotenv v1.4.0
 	github.com/jordan-wright/unindexed v0.0.0-00010101000000-000000000000
@@ -25,7 +28,6 @@ require (
 require (
 	cloud.google.com/go v0.81.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/Masterminds/squirrel v1.5.2 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -39,7 +41,6 @@ require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.10.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.2.0 // indirect

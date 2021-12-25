@@ -2,11 +2,14 @@ package restapi
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 
 	"github.com/fahmifan/smol/internal/datastore"
+	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
+	"github.com/jackc/pgx/v4"
 	"github.com/rs/zerolog/log"
 )
 
@@ -77,7 +80,7 @@ func jsonError(rw http.ResponseWriter, err error, msgs ...string) {
 			svcErr = ErrInternal
 		case model.ErrInvalidArgument:
 			svcErr = ErrInvalidArgument
-		case datastore.ErrNotFound:
+		case datastore.ErrNotFound, pgx.ErrNoRows, sql.ErrNoRows:
 			svcErr = ErrNotFound
 		}
 	}
@@ -116,18 +119,18 @@ type ctxKey string
 
 const userSessionCtxKey ctxKey = "user_session"
 
-func getUserFromCtx(c context.Context) model.User {
+func getUserFromCtx(c context.Context) sqlcpg.User {
 	res := c.Value(userSessionCtxKey)
 	if res == nil {
-		return model.User{}
+		return sqlcpg.User{}
 	}
-	if val, ok := res.(model.User); ok {
+	if val, ok := res.(sqlcpg.User); ok {
 		return val
 	}
 
-	return model.User{}
+	return sqlcpg.User{}
 }
 
-func setUserToCtx(c context.Context, user model.User) context.Context {
+func setUserToCtx(c context.Context, user sqlcpg.User) context.Context {
 	return context.WithValue(c, userSessionCtxKey, user)
 }

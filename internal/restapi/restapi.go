@@ -6,25 +6,26 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jordan-wright/unindexed"
-	httpSwagger "github.com/swaggo/http-swagger"
-	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
-
 	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore"
-	"github.com/fahmifan/smol/internal/model"
+	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
+	"github.com/fahmifan/smol/internal/rbac"
+	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/gorilla/sessions"
+	"github.com/jordan-wright/unindexed"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
 	"github.com/rs/zerolog/log"
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
 )
 
 type ServerConfig struct {
 	Port          int
-	DataStore     datastore.DataStore
+	Auther        *usecase.Auther
+	Queries       *sqlcpg.Queries
 	ServerBaseURL string
 	EnableSwagger bool
 
@@ -87,8 +88,8 @@ func (s *Server) router() http.Handler {
 	router.Get("/auth/login/provider/callback", s.HandleLoginProviderCallback())
 	router.Post("/auth/refresh", s.HandleRefreshToken())
 
-	router.Method("POST", "/todos", s.mdAuthorizedAny(model.Create_Todo)(s.HandleCreateTodo()))
-	router.Method("GET", "/todos", s.mdAuthorizedAny(model.View_AllSelfTodo)(s.HandleFindAllTodos()))
+	router.Method("POST", "/todos", s.mdAuthorizedAny(rbac.Create_Todo)(s.HandleCreateTodo()))
+	router.Method("GET", "/todos", s.mdAuthorizedAny(rbac.View_AllSelfTodo)(s.HandleFindAllTodos()))
 
 	return router
 }
