@@ -51,6 +51,9 @@ func serverCMD() *cobra.Command {
 			JWTKey:  []byte(config.JWTSecret()),
 			Queries: queries,
 		}
+		todoer := &usecase.Todoer{
+			Queries: queries,
+		}
 
 		server := restapi.NewServer(&restapi.ServerConfig{
 			Port:          config.Port(),
@@ -58,6 +61,7 @@ func serverCMD() *cobra.Command {
 			EnableSwagger: enableSwagger,
 			Auther:        auther,
 			Queries:       queries,
+			Todoer:        todoer,
 		})
 		log.Info().Int("port", config.Port()).Msg("server runs")
 		sigChan := make(chan os.Signal, 1)
