@@ -66,12 +66,14 @@ func (s *Server) route() chi.Router {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	router.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL(fmt.Sprintf("%s/assets/swagger/swagger.json", s.ServerBaseURL)),
-	))
+	if s.EnableSwagger {
+		router.Get("/swagger/*", httpSwagger.Handler(
+			httpSwagger.URL(fmt.Sprintf("%s/assets/swagger/swagger.json", s.ServerBaseURL)),
+		))
 
-	// serve static file, use unindexed.Dir to prevent directory traversal
-	router.Handle("/assets/swagger/*", http.StripPrefix("/assets/swagger/", http.FileServer(unindexed.Dir("./swagger"))))
+		// serve static file, use unindexed.Dir to prevent directory traversal
+		router.Handle("/assets/swagger/*", http.StripPrefix("/assets/swagger/", http.FileServer(unindexed.Dir("./swagger"))))
+	}
 
 	baseURL := strings.TrimSuffix(s.ServerBaseURL, "/") + "/api/auth/login/provider/callback?provider=google"
 	cookieStore := sessions.NewCookieStore([]byte("secret"))
