@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore/postgres"
+	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/fahmifan/smol/internal/restapi"
+	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -40,18 +41,27 @@ func serverCMD() *cobra.Command {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		enableSwagger := models.StringToBool(cmd.Flag("enable-swagger").Value.String())
-		dbPool := postgres.MustOpen(config.PostgresDSN())
+		dbPool := sqlcpg.MustOpen(config.PostgresDSN())
 		defer dbPool.Close()
 
-		postgres.Migrate(dbPool)
-		dataStore := &postgres.Postgres{DB: dbPool}
+		sqlcpg.Migrate(dbPool)
 
-		restapi.SetJWTKey(config.JWTSecret())
+		queries := sqlcpg.New(dbPool)
+		auther := &usecase.Auther{
+			JWTKey:  []byte(config.JWTSecret()),
+			Queries: queries,
+		}
+		todoer := &usecase.Todoer{
+			Queries: queries,
+		}
+
 		server := restapi.NewServer(&restapi.ServerConfig{
 			Port:          config.Port(),
-			DataStore:     dataStore,
 			ServerBaseURL: config.ServerBaseURL(),
 			EnableSwagger: enableSwagger,
+			Auther:        auther,
+			Queries:       queries,
+			Todoer:        todoer,
 		})
 		log.Info().Int("port", config.Port()).Msg("server runs")
 		sigChan := make(chan os.Signal, 1)

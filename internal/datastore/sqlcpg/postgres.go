@@ -1,4 +1,4 @@
-package postgres
+package sqlcpg
 
 import (
 	"context"
@@ -10,11 +10,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Postgres struct {
-	DB *pgxpool.Pool
+func MustOpen(dsn string) *pgxpool.Pool {
+	connPool, err := pgxpool.Connect(context.Background(), dsn)
+	models.PanicErr(err)
+	return connPool
 }
 
-//go:embed migration.sql
+//go:embed schema.sql
 var migrationSQL string
 
 func Migrate(conn *pgxpool.Pool) {
@@ -26,14 +28,4 @@ func Migrate(conn *pgxpool.Pool) {
 
 	rows := res.RowsAffected()
 	log.Info().Int64("rowsAffected", rows).Msg("Migrate sqlite3")
-}
-
-func MustOpen(dsn string) *pgxpool.Pool {
-	connPool, err := pgxpool.Connect(context.Background(), dsn)
-	models.PanicErr(err)
-	return connPool
-}
-
-type SqlScanner interface {
-	Scan(dest ...interface{}) error
 }

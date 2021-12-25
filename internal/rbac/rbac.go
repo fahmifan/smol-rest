@@ -1,4 +1,4 @@
-package model
+package rbac
 
 import (
 	"sync"

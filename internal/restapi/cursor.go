@@ -18,11 +18,11 @@ type PaginationResponse struct {
 	Cursor   string `json:"cursor"`
 	Backward bool   `json:"backward"`
 	HasNext  bool   `json:"hasNext"`
-	Count    uint64 `json:"count"`
-	Size     uint64 `json:"size"`
+	Count    int64  `json:"count"`
+	Size     int32  `json:"size"`
 }
 
-func NewPaginationResponse(cursor string, backward bool, count uint64, size uint64, lenData int) PaginationResponse {
+func NewPaginationResponse(cursor string, backward bool, count int64, size int32, lenData int) PaginationResponse {
 	return PaginationResponse{
 		Cursor:   cursor,
 		Backward: backward,
@@ -35,7 +35,7 @@ func NewPaginationResponse(cursor string, backward bool, count uint64, size uint
 type PaginationRequest struct {
 	Cursor   string `json:"cursor"`
 	Backward bool   `json:"backward"`
-	Size     uint64 `json:"size"`
+	Size     int32  `json:"size"`
 }
 
 type ResponseWithPagination struct {

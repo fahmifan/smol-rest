@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/fahmifan/smol/internal/datastore"
+	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/rs/zerolog/log"
@@ -36,7 +37,7 @@ type FindAllTodosRequest struct {
 // @Success 200 {object} Todo
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [post]
-func (s *Server) HandleCreateTodo() http.HandlerFunc {
+func (s *Server) handleCreateTodo() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := AddTodoRequest{}
 		defer r.Body.Close()
@@ -48,26 +49,26 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 
 		ctx := r.Context()
 		user := getUserFromCtx(ctx)
-		if user.IsEmpty() {
+		if user.ID == "" {
 			log.Debug().Msg(models.JSONS(user))
 			jsonError(rw, ErrNotFound)
 			return
 		}
 
-		todo := model.NewTodo(
-			user.ID,
-			req.Detail,
-			req.Done,
-		)
-		err = s.DataStore.SaveTodo(ctx, todo)
+		todo, err := s.Queries.SaveTodo(ctx, sqlcpg.SaveTodoParams{
+			ID:     model.NewID().String(),
+			Detail: req.Detail,
+			UserID: user.ID,
+			Done:   req.Done,
+		})
 		if err != nil {
 			jsonError(rw, err)
 			return
 		}
 
 		resp := Todo{
-			ID:     todo.ID.String(),
-			UserID: todo.UserID.String(),
+			ID:     todo.ID,
+			UserID: todo.UserID,
 			Done:   todo.Done,
 			Detail: todo.Detail,
 		}
@@ -86,7 +87,7 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 // @Success 200 {object} ResponseWithPagination
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [get]
-func (s *Server) HandleFindAllTodos() http.HandlerFunc {
+func (s *Server) handleFindAllTodos() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -104,10 +105,10 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 		}
 
 		user := getUserFromCtx(ctx)
-		todos, count, err := s.DataStore.FindAllUserTodos(ctx, user.ID, datastore.FindAllTodoFilter{
-			Cursor:   DecodeCursor(req.Pagination.Cursor),
-			Size:     req.Pagination.Size,
+		todos, count, err := s.Todoer.FindAllTodos(ctx, user.ID, datastore.FindAllTodoFilter{
+			Cursor:   req.Pagination.Cursor,
 			Backward: req.Pagination.Backward,
+			Size:     uint64(req.Pagination.Size),
 		})
 		if err != nil {
 			jsonError(rw, err)
@@ -117,8 +118,8 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 		var resTodos []Todo
 		for _, todo := range todos {
 			resTodos = append(resTodos, Todo{
-				ID:     todo.ID.String(),
-				UserID: todo.UserID.String(),
+				ID:     todo.ID,
+				UserID: todo.UserID,
 				Done:   todo.Done,
 				Detail: todo.Detail,
 			})
@@ -127,9 +128,9 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 		var cursor string
 		if ntodo := len(todos); ntodo > 0 {
 			if req.Pagination.Backward {
-				cursor = EncodeCursor(todos[0].ID.String())
+				cursor = EncodeCursor(todos[0].ID)
 			} else {
-				cursor = EncodeCursor(todos[ntodo-1].ID.String())
+				cursor = EncodeCursor(todos[ntodo-1].ID)
 			}
 		}
 
@@ -139,7 +140,7 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 				cursor,
 				req.Pagination.Backward,
 				count,
-				uint64(req.Pagination.Size),
+				req.Pagination.Size,
 				len(resTodos),
 			),
 		}

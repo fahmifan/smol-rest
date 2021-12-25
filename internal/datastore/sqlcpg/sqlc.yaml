@@ -1,0 +1,11 @@
+version: 1
+packages:
+  - path: "."
+    name: "sqlcpg"
+    engine: "postgresql"
+    schema: "schema.sql"
+    queries: "query.sql"
+    sql_package: "pgx/v4"
+overrides:
+  - column: "users.role"
+    go_type: "github.com/fahmifan/smol/internal/rbac.Role"
