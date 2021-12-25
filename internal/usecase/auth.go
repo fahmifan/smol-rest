@@ -20,6 +20,49 @@ type Auther struct {
 	Queries *sqlcpg.Queries
 }
 
+// UserToken represent user data in the token
+type UserToken struct {
+	ID    string
+	Email string
+	Role  rbac.Role
+}
+
+// AuthenticateToken authenticate the access token and return a subset of user data.
+// It doesn't do a query and only return information on the token they are user ID, Email & Role
+func (a *Auther) AuthenticateToken(accessToken string) (UserToken, bool) {
+	claims, err := a.parseJWTToken(accessToken)
+	if err != nil {
+		log.Error().Err(err).Msg("parse jwt")
+		return UserToken{}, false
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msg("parse id")
+		return UserToken{}, false
+	}
+	user := UserToken{
+		ID:    claims.ID,
+		Email: claims.Email,
+		Role:  claims.GetRoleModel(),
+	}
+	return user, true
+}
+
+func (a *Auther) parseJWTToken(token string) (claims jwtClaims, err error) {
+	tkn, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
+		return a.JWTKey, nil
+	})
+	if err != nil {
+		return claims, err
+	}
+
+	if tkn != nil && !tkn.Valid {
+		return claims, ErrInvalidToken
+	}
+
+	return claims, nil
+}
+
 // LoginFromGoth authenticate user & create new session from the Goth oauth2 flow
 func (a *Auther) LoginFromGoth(ctx context.Context, guser goth.User) (sess sqlcpg.Session, err error) {
 	user, err := a.Queries.FindUserByEmail(ctx, guser.Email)
@@ -160,6 +203,11 @@ type jwtClaims struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+// GetRoleModel ..
+func (c jwtClaims) GetRoleModel() rbac.Role {
+	return rbac.ParseRole(c.Role)
 }
 
 func (a *Auther) generateAccessToken(user sqlcpg.User, expiredAt time.Time) (string, error) {

@@ -10,7 +10,6 @@ import (
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/rbac"
 	"github.com/fahmifan/smol/internal/usecase"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v4"
 	"github.com/markbates/goth/gothic"
 	"github.com/rs/zerolog/log"
@@ -33,7 +32,7 @@ func (g *GoogleUserRawData) Parse(m Map) {
 	g.Picture = m["picture"].(string)
 }
 
-func (s *Server) HandleLoginProvider() http.HandlerFunc {
+func (s *Server) handleLoginProvider() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		if _, err := gothic.CompleteUserAuth(rw, r); err == nil {
 			log.Error().Err(err).Msg("")
@@ -51,7 +50,7 @@ type LoginResponse struct {
 	AccessToken  string `json:"accessToken"`
 }
 
-func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
+func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		guser, err := gothic.CompleteUserAuth(rw, r)
 		if err != nil {
@@ -100,7 +99,7 @@ func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 	}
 }
 
-func (s *Server) HandleRefreshToken() http.HandlerFunc {
+func (s *Server) handleRefreshToken() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := struct {
 			RT string `json:"refreshToken"`
@@ -132,7 +131,7 @@ func IsExpired(s sqlcpg.Session) bool {
 	return time.Now().After(s.RefreshTokenExpiredAt)
 }
 
-func (s *Server) HandleLogout() http.HandlerFunc {
+func (s *Server) handleLogout() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		user := getUserFromCtx(ctx)
@@ -151,12 +150,11 @@ func (s *Server) mdAuthorizedAny(perms ...rbac.Permission) func(next http.Handle
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			token, err := parseTokenFromHeader(r.Header)
 			if err != nil {
-				log.Error().Err(err).Msg("unable parse token from header")
 				jsonError(rw, ErrUnauthorized)
 				return
 			}
 
-			user, ok := auth(token)
+			user, ok := s.Auther.AuthenticateToken(token)
 			if !ok {
 				jsonError(rw, ErrUnauthorized)
 				return
@@ -177,7 +175,7 @@ func parseTokenFromHeader(header http.Header) (string, error) {
 
 	authHeaders := strings.Split(header.Get("Authorization"), " ")
 	if len(authHeaders) != 2 {
-		return "", ErrInvalidToken
+		return "", ErrMissingAuthorizationHeader
 	}
 
 	if authHeaders[0] != "Bearer" {
@@ -194,59 +192,4 @@ func parseTokenFromHeader(header http.Header) (string, error) {
 	}
 
 	return token, nil
-}
-
-// Create the JWT key used to create the signature
-var jwtKey []byte
-
-func SetJWTKey(s string) {
-	jwtKey = []byte(s)
-}
-
-// Claims jwt claim
-type Claims struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
-	jwt.RegisteredClaims
-}
-
-// GetRoleModel ..
-func (c Claims) GetRoleModel() rbac.Role {
-	return rbac.ParseRole(c.Role)
-}
-
-func parseJWTToken(token string) (claims Claims, err error) {
-	tkn, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
-	})
-	if err != nil {
-		return claims, err
-	}
-
-	if tkn != nil && !tkn.Valid {
-		return claims, ErrInvalidToken
-	}
-
-	return claims, nil
-}
-
-func auth(token string) (sqlcpg.User, bool) {
-	claims, err := parseJWTToken(token)
-	if err != nil {
-		log.Error().Err(err).Msg("parse jwt")
-		return sqlcpg.User{}, false
-	}
-
-	if err != nil {
-		log.Error().Err(err).Msg("parse id")
-		return sqlcpg.User{}, false
-	}
-	user := sqlcpg.User{
-		ID:    claims.ID,
-		Email: claims.Email,
-		Role:  claims.GetRoleModel(),
-	}
-
-	return user, true
 }

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/fahmifan/smol/internal/datastore"
-	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/jackc/pgx/v4"
@@ -119,18 +118,18 @@ type ctxKey string
 
 const userSessionCtxKey ctxKey = "user_session"
 
-func getUserFromCtx(c context.Context) sqlcpg.User {
+func getUserFromCtx(c context.Context) usecase.UserToken {
 	res := c.Value(userSessionCtxKey)
 	if res == nil {
-		return sqlcpg.User{}
+		return usecase.UserToken{}
 	}
-	if val, ok := res.(sqlcpg.User); ok {
+	if val, ok := res.(usecase.UserToken); ok {
 		return val
 	}
 
-	return sqlcpg.User{}
+	return usecase.UserToken{}
 }
 
-func setUserToCtx(c context.Context, user sqlcpg.User) context.Context {
+func setUserToCtx(c context.Context, user usecase.UserToken) context.Context {
 	return context.WithValue(c, userSessionCtxKey, user)
 }

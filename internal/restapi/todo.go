@@ -37,7 +37,7 @@ type FindAllTodosRequest struct {
 // @Success 200 {object} Todo
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [post]
-func (s *Server) HandleCreateTodo() http.HandlerFunc {
+func (s *Server) handleCreateTodo() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		req := AddTodoRequest{}
 		defer r.Body.Close()
@@ -87,7 +87,7 @@ func (s *Server) HandleCreateTodo() http.HandlerFunc {
 // @Success 200 {object} ResponseWithPagination
 // @Failure 400 {object} ErrorResponse
 // @Router /api/todos [get]
-func (s *Server) HandleFindAllTodos() http.HandlerFunc {
+func (s *Server) handleFindAllTodos() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 

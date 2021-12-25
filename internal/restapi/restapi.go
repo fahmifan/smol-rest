@@ -85,12 +85,12 @@ func (s *Server) route() chi.Router {
 func (s *Server) router() http.Handler {
 	router := chi.NewRouter()
 	router.Get("/ping", s.handlePing())
-	router.Get("/auth/login/oauth2", s.HandleLoginProvider())
-	router.Get("/auth/login/provider/callback", s.HandleLoginProviderCallback())
-	router.Post("/auth/refresh", s.HandleRefreshToken())
+	router.Get("/auth/login/oauth2", s.handleLoginProvider())
+	router.Get("/auth/login/provider/callback", s.handleLoginProviderCallback())
+	router.Post("/auth/refresh", s.handleRefreshToken())
 
-	router.Method("POST", "/todos", s.mdAuthorizedAny(rbac.Create_Todo)(s.HandleCreateTodo()))
-	router.Method("GET", "/todos", s.mdAuthorizedAny(rbac.View_AllSelfTodo)(s.HandleFindAllTodos()))
+	router.Method("POST", "/todos", s.mdAuthorizedAny(rbac.Create_Todo)(s.handleCreateTodo()))
+	router.Method("GET", "/todos", s.mdAuthorizedAny(rbac.View_AllSelfTodo)(s.handleFindAllTodos()))
 
 	return router
 }

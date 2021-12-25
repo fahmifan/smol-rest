@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/fahmifan/smol/internal/config"
-	"github.com/fahmifan/smol/internal/datastore/postgres"
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model/models"
 	"github.com/fahmifan/smol/internal/restapi"
@@ -42,7 +41,7 @@ func serverCMD() *cobra.Command {
 
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		enableSwagger := models.StringToBool(cmd.Flag("enable-swagger").Value.String())
-		dbPool := postgres.MustOpen(config.PostgresDSN())
+		dbPool := sqlcpg.MustOpen(config.PostgresDSN())
 		defer dbPool.Close()
 
 		sqlcpg.Migrate(dbPool)
@@ -53,7 +52,6 @@ func serverCMD() *cobra.Command {
 			Queries: queries,
 		}
 
-		restapi.SetJWTKey(config.JWTSecret())
 		server := restapi.NewServer(&restapi.ServerConfig{
 			Port:          config.Port(),
 			ServerBaseURL: config.ServerBaseURL(),
