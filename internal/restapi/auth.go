@@ -3,19 +3,16 @@ package restapi
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
-	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/rbac"
 	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgx/v4"
 	"github.com/markbates/goth/gothic"
-	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog/log"
 )
 
@@ -65,19 +62,9 @@ func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 		ctx := r.Context()
 		_, err = s.Queries.FindUserByEmail(ctx, guser.Email)
 		switch err {
-		case nil:
-			sess, err := s.Auther.LoginFromGoth(ctx, guser)
-			if err != nil {
-				jsonError(rw, err)
-				return
-			}
-
-			jsonOK(rw, LoginResponse{
-				UserID:       sess.UserID,
-				RefreshToken: sess.RefreshToken,
-				AccessToken:  sess.AccessToken,
-			})
-
+		default:
+			jsonError(rw, err)
+			return
 		case sql.ErrNoRows, pgx.ErrNoRows:
 			guserRawData := &GoogleUserRawData{}
 			guserRawData.Parse(guser.RawData)
@@ -97,9 +84,18 @@ func (s *Server) HandleLoginProviderCallback() http.HandlerFunc {
 				RefreshToken: sess.RefreshToken,
 				AccessToken:  sess.AccessToken,
 			})
-		default:
-			jsonError(rw, err)
-			return
+		case nil:
+			sess, err := s.Auther.LoginFromGoth(ctx, guser)
+			if err != nil {
+				jsonError(rw, err)
+				return
+			}
+
+			jsonOK(rw, LoginResponse{
+				UserID:       sess.UserID,
+				RefreshToken: sess.RefreshToken,
+				AccessToken:  sess.AccessToken,
+			})
 		}
 	}
 }
@@ -200,16 +196,6 @@ func parseTokenFromHeader(header http.Header) (string, error) {
 	return token, nil
 }
 
-// 1 hour
-func newAccessTokenExpireTime() time.Time {
-	return time.Now().Add(time.Hour)
-}
-
-// 1 month
-func newRefreshTokenExpireTime() time.Time {
-	return time.Now().Add(time.Hour * 24 * 30)
-}
-
 // Create the JWT key used to create the signature
 var jwtKey []byte
 
@@ -228,68 +214,6 @@ type Claims struct {
 // GetRoleModel ..
 func (c Claims) GetRoleModel() rbac.Role {
 	return rbac.ParseRole(c.Role)
-}
-
-func generateAccessToken(user model.User, expiredAt time.Time) (string, error) {
-	claims := &Claims{
-		ID:    user.ID.String(),
-		Email: user.Email,
-		Role:  user.Role.String(),
-		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        model.NewID().String(),
-			Subject:   user.ID.String(),
-			ExpiresAt: jwt.NewNumericDate(expiredAt),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-func generateRefreshToken(userID ulid.ULID, expiredAt time.Time) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": userID.String(),
-		"exp": expiredAt.Unix(),
-	})
-	rt, err := token.SignedString(jwtKey)
-	if err != nil {
-		return "", err
-	}
-
-	return rt, nil
-}
-
-func parseRefreshToken(token string) (sessID ulid.ULID, err error) {
-	claims := jwt.MapClaims{}
-	tkn, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		return sessID, err
-	}
-
-	if tkn != nil && !tkn.Valid {
-		return sessID, ErrInvalidToken
-	}
-
-	sub, ok := claims["sub"].(string)
-	if !ok {
-		return sessID, ErrInvalidToken
-	}
-	log.Debug().Str("sub", sub).Msg("")
-
-	sessID, err = ulid.Parse(sub)
-	if err != nil {
-		return sessID, fmt.Errorf("unable to parse sub into sessID: %w", err)
-	}
-	return
 }
 
 func parseJWTToken(token string) (claims Claims, err error) {

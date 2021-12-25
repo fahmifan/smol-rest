@@ -7,8 +7,8 @@ import (
 
 	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
-	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
+	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/jackc/pgx/v4"
 	"github.com/rs/zerolog/log"
 )
@@ -78,7 +78,7 @@ func jsonError(rw http.ResponseWriter, err error, msgs ...string) {
 		switch err {
 		default:
 			svcErr = ErrInternal
-		case model.ErrInvalidArgument:
+		case usecase.ErrInvalidArgument:
 			svcErr = ErrInvalidArgument
 		case datastore.ErrNotFound, pgx.ErrNoRows, sql.ErrNoRows:
 			svcErr = ErrNotFound

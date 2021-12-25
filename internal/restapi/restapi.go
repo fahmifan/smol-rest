@@ -24,10 +24,11 @@ import (
 
 type ServerConfig struct {
 	Port          int
-	Auther        *usecase.Auther
-	Queries       *sqlcpg.Queries
 	ServerBaseURL string
 	EnableSwagger bool
+	Queries       *sqlcpg.Queries
+	Auther        *usecase.Auther
+	Todoer        *usecase.Todoer
 
 	httpServer *http.Server
 }

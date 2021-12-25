@@ -3,8 +3,8 @@ package restapi
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
+	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model"
 	"github.com/fahmifan/smol/internal/model/models"
@@ -105,33 +105,11 @@ func (s *Server) HandleFindAllTodos() http.HandlerFunc {
 		}
 
 		user := getUserFromCtx(ctx)
-		var todos []sqlcpg.Todo
-		if strings.TrimSpace(req.Pagination.Cursor) == "" {
-			todos, err = s.Queries.FindAllUserTodos(ctx, sqlcpg.FindAllUserTodosParams{
-				UserID: user.ID,
-				Size:   int32(req.Pagination.Size),
-			})
-		} else {
-			if req.Pagination.Backward {
-				todos, err = s.Queries.FindAllUserTodosAsc(ctx, sqlcpg.FindAllUserTodosAscParams{
-					UserID: user.ID,
-					Cursor: req.Pagination.Cursor,
-					Size:   int32(req.Pagination.Size),
-				})
-			} else {
-				todos, err = s.Queries.FindAllUserTodosDesc(ctx, sqlcpg.FindAllUserTodosDescParams{
-					UserID: user.ID,
-					Cursor: req.Pagination.Cursor,
-					Size:   int32(req.Pagination.Size),
-				})
-			}
-		}
-		if err != nil {
-			jsonError(rw, err)
-			return
-		}
-
-		count, err := s.Queries.CountAllTodos(ctx, user.ID)
+		todos, count, err := s.Todoer.FindAllTodos(ctx, user.ID, datastore.FindAllTodoFilter{
+			Cursor:   req.Pagination.Cursor,
+			Backward: req.Pagination.Backward,
+			Size:     uint64(req.Pagination.Size),
+		})
 		if err != nil {
 			jsonError(rw, err)
 			return

@@ -10,6 +10,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func MustOpen(dsn string) *pgxpool.Pool {
+	connPool, err := pgxpool.Connect(context.Background(), dsn)
+	models.PanicErr(err)
+	return connPool
+}
+
 //go:embed schema.sql
 var migrationSQL string
 
