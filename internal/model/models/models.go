@@ -3,10 +3,12 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mashingan/smapping"
 	"github.com/rs/zerolog/log"
@@ -117,4 +119,8 @@ func JSON(i interface{}) []byte {
 
 func JSONS(i interface{}) string {
 	return string(JSON(i))
+}
+
+func ContextTimeOut(t time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), t)
 }

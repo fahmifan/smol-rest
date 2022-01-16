@@ -4,10 +4,31 @@ package sqlcpg
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
-	"github.com/fahmifan/smol/internal/rbac"
+	"github.com/fahmifan/smol/internal/auth"
 )
+
+type Roles string
+
+const (
+	RolesAdmin Roles = "admin"
+	RolesUser  Roles = "user"
+	RolesGuest Roles = "guest"
+)
+
+func (e *Roles) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Roles(s)
+	case string:
+		*e = Roles(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Roles: %T", src)
+	}
+	return nil
+}
 
 type Session struct {
 	ID                    string
@@ -30,5 +51,5 @@ type User struct {
 	ID    string
 	Name  sql.NullString
 	Email string
-	Role  rbac.Role
+	Role  auth.Role
 }

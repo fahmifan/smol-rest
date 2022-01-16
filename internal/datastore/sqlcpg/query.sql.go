@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/fahmifan/smol/internal/rbac"
+	"github.com/fahmifan/smol/internal/auth"
 )
 
 const countAllTodos = `-- name: CountAllTodos :one
@@ -320,7 +320,7 @@ type SaveUserParams struct {
 	ID    string
 	Name  sql.NullString
 	Email string
-	Role  rbac.Role
+	Role  auth.Role
 }
 
 // Users

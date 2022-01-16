@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/fahmifan/smol/internal/auth"
 	"github.com/fahmifan/smol/internal/datastore"
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
 	"github.com/fahmifan/smol/internal/model"
-	"github.com/fahmifan/smol/internal/rbac"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/markbates/goth"
 	"github.com/rs/zerolog/log"
@@ -24,7 +24,7 @@ type Auther struct {
 type UserToken struct {
 	ID    string
 	Email string
-	Role  rbac.Role
+	Role  auth.Role
 }
 
 // AuthenticateToken authenticate the access token and return a subset of user data.
@@ -80,7 +80,7 @@ func (a *Auther) LoginFromGoth(ctx context.Context, guser goth.User) (sess sqlcp
 }
 
 type RegisterParams struct {
-	Role  rbac.Role
+	Role  auth.Role
 	Name  string
 	Email string
 }
@@ -206,15 +206,15 @@ type jwtClaims struct {
 }
 
 // GetRoleModel ..
-func (c jwtClaims) GetRoleModel() rbac.Role {
-	return rbac.ParseRole(c.Role)
+func (c jwtClaims) GetRoleModel() auth.Role {
+	return auth.Role(c.Role)
 }
 
 func (a *Auther) generateAccessToken(user sqlcpg.User, expiredAt time.Time) (string, error) {
 	claims := &jwtClaims{
 		ID:    user.ID,
 		Email: user.Email,
-		Role:  user.Role.String(),
+		Role:  string(user.Role),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        model.NewID().String(),
 			Subject:   user.ID,

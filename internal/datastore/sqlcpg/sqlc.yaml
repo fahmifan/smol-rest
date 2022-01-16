@@ -8,4 +8,4 @@ packages:
     sql_package: "pgx/v4"
 overrides:
   - column: "users.role"
-    go_type: "github.com/fahmifan/smol/internal/rbac.Role"
+    go_type: "github.com/fahmifan/smol/internal/auth.Role"

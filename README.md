@@ -9,7 +9,7 @@ Just a Smol Go Web Service
     - login: goth
         - [x] Google
     - session: scs
-- authz: simple rbac
+- authz: simple acl
 - proxy: Caddy
 
 ## Framework Architecture

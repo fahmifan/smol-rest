@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fahmifan/smol/internal/auth"
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
-	"github.com/fahmifan/smol/internal/rbac"
 	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/jackc/pgx/v4"
 	"github.com/markbates/goth/gothic"
@@ -69,7 +69,7 @@ func (s *Server) handleLoginProviderCallback() http.HandlerFunc {
 			guserRawData.Parse(guser.RawData)
 
 			sess, err := s.Auther.RegisterFromGoth(ctx, usecase.RegisterParams{
-				Role:  rbac.RoleUser,
+				Role:  auth.RoleUser,
 				Email: guserRawData.Email,
 				Name:  guser.Name,
 			})
@@ -145,7 +145,7 @@ func (s *Server) handleLogout() http.HandlerFunc {
 	}
 }
 
-func (s *Server) mdAuthorizedAny(perms ...rbac.Permission) func(next http.Handler) http.Handler {
+func (s *Server) mdAuthorizedAny(perms ...auth.Permission) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			token, err := parseTokenFromHeader(r.Header)
@@ -165,8 +165,13 @@ func (s *Server) mdAuthorizedAny(perms ...rbac.Permission) func(next http.Handle
 				return
 			}
 
-			if !user.Role.GrantedAny(perms...) {
-				jsonError(rw, nil)
+			err = auth.GrantedAny(user.Role, perms...)
+			if err == auth.ErrPermissionDenied {
+				jsonError(rw, ErrUnauthorized)
+				return
+			}
+			if err != nil {
+				jsonError(rw, err)
 				return
 			}
 
