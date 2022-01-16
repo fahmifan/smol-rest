@@ -66,13 +66,15 @@ func Perm(act Action, rsc Resource) Permission {
 var ErrPermissionDenied = errors.New("permission denied")
 var ErrACLNotSet = errors.New("acl not set")
 
-func GrantedAny(role Role, perm ...Permission) error {
+// GrantedAny check if the Role is granted any permissions.
+// If a permission is given, returns nil
+func GrantedAny(role Role, perms ...Permission) error {
 	if _ACL == nil {
 		return ErrACLNotSet
 	}
 
-	for _, ra := range perm {
-		err := _ACL.Can(acl.Role(role), acl.Action(ra.Action), acl.Resource(ra.Resource))
+	for _, perm := range perms {
+		err := _ACL.Can(acl.Role(role), acl.Action(perm.Action), acl.Resource(perm.Resource))
 		if errors.Is(err, acl.ErrPermissionDenied) {
 			return ErrPermissionDenied
 		}
