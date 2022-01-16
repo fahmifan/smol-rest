@@ -166,8 +166,12 @@ func (s *Server) mdAuthorizedAny(perms ...auth.Permission) func(next http.Handle
 			}
 
 			err = auth.GrantedAny(user.Role, perms...)
+			if err == auth.ErrPermissionDenied {
+				jsonError(rw, ErrUnauthorized)
+				return
+			}
 			if err != nil {
-				jsonError(rw, nil)
+				jsonError(rw, err)
 				return
 			}
 

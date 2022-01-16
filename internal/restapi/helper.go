@@ -90,7 +90,7 @@ func jsonError(rw http.ResponseWriter, err error, msgs ...string) {
 		log.Error().Int("code", int(svcErr)).Err(err).Msg("unknown code")
 		statusCode = http.StatusInternalServerError
 	case ErrInternal:
-		log.Error().Err(err).Msg("")
+		log.Error().Err(svcErr).Msg("")
 		statusCode = http.StatusInternalServerError
 	case ErrInvalidArgument, ErrInvalidToken, ErrRefreshTokenExpired:
 		statusCode = http.StatusBadRequest
