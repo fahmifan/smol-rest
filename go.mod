@@ -3,7 +3,7 @@ module github.com/fahmifan/smol
 go 1.17
 
 require (
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/fahmifan/flycasbin v0.0.0-20220115024912-e54fb8eeed0a
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/cors v1.2.0
 	github.com/golang-jwt/jwt/v4 v4.2.0
@@ -12,6 +12,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/joho/godotenv v1.4.0
 	github.com/jordan-wright/unindexed v0.0.0-00010101000000-000000000000
+	github.com/lib/pq v1.10.4
 	github.com/markbates/goth v1.68.0
 	github.com/mashingan/smapping v0.1.13
 	github.com/oklog/ulid/v2 v2.0.2
@@ -20,14 +21,15 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/http-swagger v1.1.2
 	github.com/swaggo/http-swagger/example/go-chi v0.0.0-20211012192856-5c56dbb3af38
-	github.com/swaggo/swag v1.7.6
 )
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
+	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
+	github.com/casbin/casbin/v2 v2.40.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
@@ -50,6 +52,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14 // indirect
+	github.com/swaggo/swag v1.7.6 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect

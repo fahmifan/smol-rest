@@ -1,8 +1,14 @@
+CREATE TYPE roles AS ENUM (
+  'admin',
+  'user',
+  'guest'
+);
+
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     "name" TEXT,
     email TEXT NOT NULL,
-    "role" INT NOT NULL
+    "role" roles NOT NULL DEFAULT 'user'
 );
 
 CREATE TABLE IF NOT EXISTS todos (

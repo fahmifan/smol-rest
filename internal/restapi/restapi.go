@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/fahmifan/smol/internal/auth"
 	"github.com/fahmifan/smol/internal/config"
 	"github.com/fahmifan/smol/internal/datastore/sqlcpg"
-	"github.com/fahmifan/smol/internal/rbac"
 	"github.com/fahmifan/smol/internal/usecase"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -92,8 +92,8 @@ func (s *Server) router() http.Handler {
 	router.Post("/auth/refresh", s.handleRefreshToken())
 
 	router.Method(http.MethodGet, "/auth/logout", s.mdAuthorizedAny()(s.handleLogout()))
-	router.Method(http.MethodPost, "/todos", s.mdAuthorizedAny(rbac.Create_Todo)(s.handleCreateTodo()))
-	router.Method(http.MethodGet, "/todos", s.mdAuthorizedAny(rbac.View_AllSelfTodo)(s.handleFindAllTodos()))
+	router.Method(http.MethodPost, "/todos", s.mdAuthorizedAny(auth.Perm(auth.Create, auth.Todo))(s.handleCreateTodo()))
+	router.Method(http.MethodGet, "/todos", s.mdAuthorizedAny(auth.Perm(auth.ViewSelf, auth.Todo))(s.handleFindAllTodos()))
 
 	return router
 }
